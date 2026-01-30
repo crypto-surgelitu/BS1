@@ -5,13 +5,11 @@ This Booking System is a simple web-based application designed to allow users to
 The project demonstrates the basics of frontend and backend interaction, user input handling, and booking record management.
 
 
-##Features
+## Features
+- Create bookings
+- View bookings
+- Prevent double booking
 
-Create a new booking
-View available bookings
-Prevent double booking
-Simple and user-friendly interface
-Easy to customize for different use cases (rooms, events, services)
 
 ## Technologies Used
 - HTML
