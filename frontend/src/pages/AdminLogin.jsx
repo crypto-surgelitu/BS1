@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Mail, Lock } from 'lucide-react';
-
+import { Shield, Mail, Lock } from 'lucide-react';
 const AdminLogin = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
@@ -30,7 +29,7 @@ const AdminLogin = () => {
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
                 <div className="flex flex-col items-center mb-8">
                     <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mb-4">
-                        <ShieldCheck className="text-white w-8 h-8" />
+                        <Shield className="text-white w-8 h-8" />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900">Admin Portal</h1>
                     <p className="text-gray-500 mt-2">Sign in to manage rooms and users</p>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Users, DoorOpen, Bookmark } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -13,7 +13,7 @@ const Dashboard = () => {
     const [currentView, setCurrentView] = useState('available');
 
     useEffect(() => {
-        const storedRooms = JSON.parse(localStorage.getItem('rooms')) || [
+        const defaultRooms = [
             { id: 1, name: 'Conference Room A', floor: 'Floor 1', capacity: 10, amenities: ['Projector', 'Whiteboard', 'Video Conference'], status: 'Available' },
             { id: 2, name: 'Meeting Room B', floor: 'Floor 1', capacity: 6, amenities: ['Whiteboard', 'TV Display'], status: 'Available' },
             { id: 3, name: 'Boardroom', floor: 'Floor 2', capacity: 12, amenities: ['Projector', 'Video Conference', 'AC'], status: 'Available' },
@@ -21,9 +21,16 @@ const Dashboard = () => {
             { id: 5, name: 'Training Hall', floor: 'Ground Floor', capacity: 50, amenities: ['Sound System', 'Projector'], status: 'Reserved' },
             { id: 6, name: 'Podcast Studio', floor: 'Floor 3', capacity: 4, amenities: ['Soundproofing', 'Mics'], status: 'Booked' }
         ];
-        setRooms(storedRooms);
-        if (!localStorage.getItem('rooms')) {
-            localStorage.setItem('rooms', JSON.stringify(storedRooms));
+
+        try {
+            const storedRooms = JSON.parse(localStorage.getItem('rooms')) || defaultRooms;
+            setRooms(storedRooms);
+            if (!localStorage.getItem('rooms')) {
+                localStorage.setItem('rooms', JSON.stringify(defaultRooms));
+            }
+        } catch (e) {
+            console.error('Error parsing rooms:', e);
+            setRooms(defaultRooms);
         }
     }, []);
 
