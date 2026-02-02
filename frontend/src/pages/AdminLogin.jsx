@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Mail, Lock } from 'lucide-react';
+import { Shield, Mail, Lock, User } from 'lucide-react';
 const AdminLogin = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
@@ -16,7 +16,7 @@ const AdminLogin = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         // Mock Admin Login
-        if (formData.email === 'admin@swahilipot.com' && formData.password === 'admin123') {
+        if (formData.email.trim() === 'admin@swahilipot.com' && formData.password.trim() === 'admin123') {
             localStorage.setItem('isAdmin', 'true');
             navigate('/admin/dashboard');
         } else {
@@ -28,10 +28,12 @@ const AdminLogin = () => {
         <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
                 <div className="flex flex-col items-center mb-8">
-                    <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mb-4">
-                        <Shield className="text-white w-8 h-8" />
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                        <User className="text-red-600 w-8 h-8" />
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900">Admin Portal</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        Admin Portal <Shield className="w-5 h-5 text-red-500" />
+                    </h1>
                     <p className="text-gray-500 mt-2">Sign in to manage rooms and users</p>
                 </div>
 

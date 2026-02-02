@@ -28,10 +28,12 @@ const Signup = () => {
         <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
                 <div className="flex flex-col items-center mb-8">
-                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4">
-                        <Building2 className="text-white w-8 h-8" />
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                        <User className="text-blue-600 w-8 h-8" />
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900">Create an Account</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        Create an Account <User className="w-5 h-5 text-blue-500" />
+                    </h1>
                     <p className="text-gray-500 mt-2">Sign up to book rooms at Swahilipot</p>
                 </div>
 
