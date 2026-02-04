@@ -17,11 +17,38 @@ const Signup = () => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Signup Data:', formData);
-        // Mock signup - navigate to login or dashboard
-        navigate('/login');
+
+        if (formData.password !== formData.confirmPassword) {
+            alert("Passwords do not match!");
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:3000/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: formData.email,
+                    password: formData.password
+                    // Note: fullName and department are in UI but not in current schema.sql
+                    // We only send email/password to backend for now.
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert("Account created! Please login.");
+                navigate('/login');
+            } else {
+                alert("Signup failed: " + data.message);
+            }
+        } catch (error) {
+            console.error("Signup error:", error);
+            alert("Error connecting to server.");
+        }
     };
 
     return (
