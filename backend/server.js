@@ -4,6 +4,7 @@ const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 const nodeCron = require('node-cron');
+const nodemailer = require('nodemailer');
 const sendMail = require('./mailer');
 
 const app = express();
