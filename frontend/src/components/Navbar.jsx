@@ -4,20 +4,22 @@ import { useNavigate } from 'react-router-dom';
 
 const Navbar = ({ onMenuClick }) => {
     const navigate = useNavigate();
-    const [user, setUser] = useState({ fullName: 'Loading...', email: '' });
-
-    useEffect(() => {
+    const [user] = useState(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
             try {
-                setUser(JSON.parse(storedUser));
+                return JSON.parse(storedUser);
             } catch (err) {
                 console.error('Error parsing user data:', err);
-                navigate('/login');
+                localStorage.removeItem('user');
             }
-        } else {
-            // If no user found, redirect to login (optional: depends on route protection)
-            // navigate('/login');
+        }
+        return { fullName: 'User', email: '' };
+    });
+
+    useEffect(() => {
+        if (!localStorage.getItem('user')) {
+            navigate('/login');
         }
     }, [navigate]);
 
