@@ -22,7 +22,10 @@ const AdminDashboard = () => {
             setRooms(roomsData);
 
             // Fetch Admin Bookings
-            const bookingsRes = await fetch('http://localhost:3000/admin/bookings');
+            const user = JSON.parse(localStorage.getItem('user'));
+            const bookingsRes = await fetch('http://localhost:3000/admin/bookings', {
+                headers: { 'X-User-Id': user?.id }
+            });
             const bookingsData = await bookingsRes.json();
             setBookings(bookingsData);
 
@@ -73,16 +76,73 @@ const AdminDashboard = () => {
         navigate('/login');
     };
 
-    const deleteRoom = (id) => {
-        const updatedRooms = rooms.filter(r => r.id !== id);
-        setRooms(updatedRooms);
-        localStorage.setItem('rooms', JSON.stringify(updatedRooms));
+    const deleteRoom = async (id) => {
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const res = await fetch(`http://localhost:3000/admin/rooms/${id}`, {
+                method: 'DELETE',
+                headers: { 'X-User-Id': user?.id }
+            });
+
+            if (res.ok) {
+                setRooms(rooms.filter(r => r.id !== id));
+            } else {
+                const error = await res.json();
+                alert(error.error || 'Failed to delete room');
+            }
+        } catch (err) {
+            console.error('Error deleting room:', err);
+        }
     };
 
-    const handleAddRoom = (newRoom) => {
-        const updatedRooms = [...rooms, newRoom];
-        setRooms(updatedRooms);
-        localStorage.setItem('rooms', JSON.stringify(updatedRooms));
+    const handleAddRoom = async (newRoom) => {
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const res = await fetch('http://localhost:3000/admin/rooms', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Id': user?.id
+                },
+                body: JSON.stringify(newRoom),
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setRooms([...rooms, { ...newRoom, id: data.roomId }]);
+                setIsModalOpen(false);
+            } else {
+                const error = await res.json();
+                alert(error.error || 'Failed to add room');
+            }
+        } catch (err) {
+            console.error('Error adding room:', err);
+        }
+    };
+
+    const updateBookingStatus = async (id, status) => {
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const res = await fetch(`http://localhost:3000/admin/bookings/${id}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Id': user?.id
+                },
+                body: JSON.stringify({ status }),
+            });
+
+            if (res.ok) {
+                // Refresh data to show updated status
+                fetchData();
+            } else {
+                const error = await res.json();
+                alert(error.error || 'Failed to update booking status');
+            }
+        } catch (err) {
+            console.error('Error updating booking status:', err);
+            alert('An error occurred. Please try again.');
+        }
     };
 
     return (
@@ -222,16 +282,30 @@ const AdminDashboard = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                                    booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                        'bg-red-100 text-red-800'
+                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase ${booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                                booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                    'bg-red-100 text-red-800'
                                                 }`}>
                                                 {booking.status}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button className="text-green-600 hover:text-green-900 mr-3 font-bold">Approve</button>
-                                            <button className="text-red-600 hover:text-red-900 font-bold">Reject</button>
+                                            {booking.status === 'pending' && (
+                                                <>
+                                                    <button
+                                                        onClick={() => updateBookingStatus(booking.id, 'confirmed')}
+                                                        className="text-green-600 hover:text-green-900 mr-3 font-bold"
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                    <button
+                                                        onClick={() => updateBookingStatus(booking.id, 'rejected')}
+                                                        className="text-red-600 hover:text-red-900 font-bold"
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </>
+                                            )}
                                         </td>
                                     </tr>
                                 )) : (
