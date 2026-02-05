@@ -424,6 +424,77 @@ app.get('/admin/bookings', async (req, res) => {
     }
 });
 
+// UPDATE BOOKING STATUS (Admin Only)
+app.put('/admin/bookings/:id/status', async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['confirmed', 'rejected'].includes(status)) {
+        return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    try {
+        // Get booking and user details first for email
+        const [bookings] = await dbPromise.query(
+            `SELECT b.*, u.full_name, u.email, r.name as room_name 
+             FROM bookings b
+             JOIN users u ON b.user_id = u.id
+             JOIN rooms r ON b.room_id = r.id
+             WHERE b.id = ?`,
+            [id]
+        );
+
+        if (bookings.length === 0) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        const booking = bookings[0];
+
+        // Update status
+        await dbPromise.query(
+            'UPDATE bookings SET status = ? WHERE id = ?',
+            [status, id]
+        );
+
+        console.log(`✅ Booking ${id} status updated to: ${status}`);
+
+        // Send notification email to user
+        const statusText = status === 'confirmed' ? 'Approved' : 'Rejected';
+        const statusColor = status === 'confirmed' ? '#10B981' : '#EF4444';
+
+        sendMail(
+            booking.email,
+            `Room Booking Update: ${statusText}`,
+            `Hello ${booking.full_name},\n\nYour booking request for ${booking.room_name} on ${booking.booking_date} has been ${statusText}.\n\nBest regards,\nSwahiliPot Hub Team`,
+            `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
+                <h2 style="color: #0B4F6C; border-bottom: 2px solid #0B4F6C; padding-bottom: 10px;">Booking Update</h2>
+                <p>Hello <strong>${booking.full_name}</strong>,</p>
+                <p>There is an update regarding your room booking request.</p>
+                
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 5px solid ${statusColor};">
+                    <p style="margin: 5px 0;"><strong>Space:</strong> ${booking.room_name}</p>
+                    <p style="margin: 5px 0;"><strong>Date:</strong> ${booking.booking_date}</p>
+                    <p style="margin: 5px 0;"><strong>Time Slot:</strong> ${booking.start_time} - ${booking.end_time}</p>
+                    <p style="margin: 10px 0; font-size: 18px;"><strong>Status: <span style="color: ${statusColor}; text-transform: uppercase;">${statusText}</span></strong></p>
+                </div>
+
+                <p>${status === 'confirmed' ? 'We look forward to seeing you!' : 'If you have any questions, please contact the administration.'}</p>
+                
+                <div style="margin-top: 30px; font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 10px;">
+                    This is an automated message from SwahiliPot Hub Room Booking System.
+                </div>
+            </div>
+            `
+        );
+
+        res.json({ message: `Booking status updated to ${status}` });
+    } catch (error) {
+        console.error('Update booking status error:', error);
+        res.status(500).json({ error: 'Failed to update booking status' });
+    }
+});
+
 // GET USER BOOKINGS
 app.get('/bookings/user/:userId', async (req, res) => {
     const { userId } = req.params;
