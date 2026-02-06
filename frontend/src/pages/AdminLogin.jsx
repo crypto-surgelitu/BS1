@@ -23,7 +23,7 @@ const AdminLogin = () => {
         setError('');
 
         try {
-            const response = await fetch('http://127.0.0.1:3000/login', {
+            const response = await fetch('http://localhost:3005/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ const AdminLogin = () => {
             } else {
                 setError(data.error || 'Invalid Admin Credentials');
             }
-        } catch (err) {
+        } catch {
             setError('Server connection failed. Please ensure the backend is running.');
         } finally {
             setLoading(false);
@@ -83,7 +83,7 @@ const AdminLogin = () => {
                                 value={formData.email}
                                 onChange={handleChange}
                                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 bg-gray-50 text-gray-900 placeholder-gray-400"
-                                placeholder="admin@swahilipot.com"
+                                placeholder="admin@swahilipothub.co.ke"
                                 required
                             />
                         </div>

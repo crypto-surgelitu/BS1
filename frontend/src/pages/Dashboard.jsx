@@ -14,7 +14,13 @@ const Dashboard = () => {
     const [currentView, setCurrentView] = useState('available');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+<<<<<<< HEAD
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [activeBooking, setActiveBooking] = useState(null);
+    const [countdown, setCountdown] = useState('');
+=======
     const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString('en-CA'));
+>>>>>>> 7022b8d25fbb5adc4bbca9dfc6ba8aa0474833c2
 
     const fetchRooms = async () => {
         setLoading(true);
@@ -22,7 +28,7 @@ const Dashboard = () => {
         try {
             // Include date in query if we're in the 'available' view
             const queryParam = currentView === 'available' ? `?date=${selectedDate}` : '';
-            const response = await fetch(`http://localhost:3000/rooms${queryParam}`);
+            const response = await fetch(`http://localhost:3005/rooms${queryParam}`);
 
             if (!response.ok) throw new Error('Failed to fetch rooms');
 
@@ -38,7 +44,62 @@ const Dashboard = () => {
 
     useEffect(() => {
         fetchRooms();
+        fetchActiveBooking();
     }, [currentView, selectedDate]);
+
+    // Fetch active session for the countdown
+    const fetchActiveBooking = async () => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) return;
+
+        try {
+            const response = await fetch(`http://localhost:3005/bookings/user/${user.id}`);
+            const bookings = await response.json();
+
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            const currentTime = now.toTimeString().split(' ')[0];
+
+            // Find an active confirmed booking for today and current time slot
+            const active = bookings.find(b =>
+                b.status === 'confirmed' &&
+                b.booking_date.startsWith(today) &&
+                b.start_time <= currentTime &&
+                b.end_time > currentTime
+            );
+
+            setActiveBooking(active);
+        } catch (err) {
+            console.error('Error fetching active booking:', err);
+        }
+    };
+
+    // Update countdown every second
+    useEffect(() => {
+        if (!activeBooking) return;
+
+        const timer = setInterval(() => {
+            const now = new Date();
+            const [hours, minutes, seconds] = activeBooking.end_time.split(':');
+            const endTime = new Date();
+            endTime.setHours(parseInt(hours), parseInt(minutes), parseInt(seconds || 0), 0);
+
+            const diff = endTime - now;
+
+            if (diff <= 0) {
+                setActiveBooking(null);
+                setCountdown('');
+                clearInterval(timer);
+                fetchRooms(); // Refresh rooms as status might have changed
+            } else {
+                const m = Math.floor(diff / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                setCountdown(`${m}m ${s}s`);
+            }
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [activeBooking]);
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -108,6 +169,23 @@ const Dashboard = () => {
             />
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow">
+                {activeBooking && (
+                    <div className="mb-6 bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 rounded-xl shadow-lg flex items-center justify-between animate-pulse">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-white/20 p-2 rounded-lg">
+                                <Clock className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-medium text-blue-100 uppercase tracking-wider">Active Session: {activeBooking.room_name}</p>
+                                <p className="text-lg font-bold">Time Remaining</p>
+                            </div>
+                        </div>
+                        <div className="text-3xl font-black bg-white/10 px-4 py-2 rounded-xl backdrop-blur-sm border border-white/20">
+                            {countdown}
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                     <div className="flex flex-col gap-1">
                         <h1 className="text-2xl font-bold text-gray-900">{getPageTitle()}</h1>

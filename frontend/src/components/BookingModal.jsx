@@ -31,7 +31,7 @@ const BookingModal = ({ isOpen, onClose, room, type }) => {
         const user = JSON.parse(userStr);
 
         try {
-            const response = await fetch('http://localhost:3000/book', {
+            const response = await fetch('http://localhost:3005/book', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

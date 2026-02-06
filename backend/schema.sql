@@ -50,6 +50,21 @@ CREATE TABLE IF NOT EXISTS bookings (
     UNIQUE KEY unique_booking (room_id, booking_date, start_time, end_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Create active_sessions table (to track current room usage)
+CREATE TABLE IF NOT EXISTS active_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    room_id INT NOT NULL,
+    booking_id INT,
+    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE SET NULL,
+    INDEX idx_user_id (user_id),
+    INDEX idx_room_id (room_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Insert default admin user (password: admin123)
 -- Note: This is a hashed version of 'admin123' using bcrypt
 INSERT INTO users (email, password_hash, full_name, department, role) 

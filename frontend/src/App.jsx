@@ -4,6 +4,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import Booking from './Booking'; // Import Booking component
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/book" element={<Booking />} /> {/* Add Booking Route */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="*" element={

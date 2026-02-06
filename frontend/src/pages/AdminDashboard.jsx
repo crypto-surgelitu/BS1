@@ -13,6 +13,8 @@ const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('rooms'); // 'rooms', 'users', or 'bookings'
     const [loading, setLoading] = useState(false);
 
+<<<<<<< HEAD
+=======
     const fetchData = async () => {
         setLoading(true);
         try {
@@ -46,6 +48,7 @@ const AdminDashboard = () => {
         fetchData();
     }, [navigate]);
 
+>>>>>>> 7022b8d25fbb5adc4bbca9dfc6ba8aa0474833c2
     const calculateDuration = (loginTime) => {
         if (!loginTime) return 'Unknown';
         try {
@@ -63,12 +66,64 @@ const AdminDashboard = () => {
         }
     };
 
+<<<<<<< HEAD
+    const endSession = async (sessionId) => {
+        try {
+            const response = await fetch('http://localhost:3005/admin/sessions/end', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ sessionId }),
+            });
+
+            if (response.ok) {
+                fetchData(); // Refresh data
+            } else {
+                const data = await response.json();
+                console.error('Error ending session:', data.error);
+                alert('Failed to end session: ' + data.error);
+            }
+        } catch (err) {
+            console.error('Error ending session:', err);
+            alert('Network error while ending session');
+        }
+    };
+
+    const startSession = async (booking) => {
+        try {
+            const response = await fetch('http://localhost:3005/admin/sessions/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: booking.user_id || booking.userId,
+                    roomId: booking.room_id || booking.roomId,
+                    bookingId: booking.id
+                }),
+            });
+
+            if (response.ok) {
+                fetchData(); // Refresh data
+                setActiveTab('users'); // Switch to active users tab
+            } else {
+                const data = await response.json();
+                console.error('Error starting session:', data.error);
+                alert('Failed to start session: ' + data.error);
+            }
+        } catch (err) {
+            console.error('Error starting session:', err);
+            alert('Network error while starting session');
+        }
+=======
     const removeSession = (id) => {
         const updatedSessions = activeSessions.filter(s => s.id !== id);
         setActiveSessions(updatedSessions);
         // We'll keep sessions in local for now as backend doesn't track them yet, 
         // but we're moving rooms to DB
         localStorage.setItem('activeSessions', JSON.stringify(updatedSessions));
+>>>>>>> 7022b8d25fbb5adc4bbca9dfc6ba8aa0474833c2
     };
 
     const handleLogout = () => {
@@ -115,6 +170,39 @@ const AdminDashboard = () => {
             alert('Error connecting to server');
         }
     };
+
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            // Fetch Rooms
+            const roomsRes = await fetch('http://localhost:3005/rooms');
+            const roomsData = await roomsRes.json();
+            setRooms(roomsData);
+
+            // Fetch Admin Bookings
+            const bookingsRes = await fetch('http://localhost:3005/admin/bookings');
+            const bookingsData = await bookingsRes.json();
+            setBookings(bookingsData);
+
+            // Fetch Active Sessions from backend
+            const sessionsRes = await fetch('http://localhost:3005/admin/sessions');
+            const sessionsData = await sessionsRes.json();
+            setActiveSessions(sessionsData);
+        } catch (err) {
+            console.error('Error fetching admin data:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || user.role !== 'admin') {
+            navigate('/login');
+            return;
+        }
+        fetchData();
+    }, [navigate]);
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -262,6 +350,14 @@ const AdminDashboard = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <button className="text-green-600 hover:text-green-900 mr-3 font-bold">Approve</button>
+                                            {booking.status === 'confirmed' && (
+                                                <button
+                                                    onClick={() => startSession(booking)}
+                                                    className="text-blue-600 hover:text-blue-900 mr-3 font-bold"
+                                                >
+                                                    Start Session
+                                                </button>
+                                            )}
                                             <button className="text-red-600 hover:text-red-900 font-bold">Reject</button>
                                         </td>
                                     </tr>
@@ -302,10 +398,10 @@ const AdminDashboard = () => {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 <div className="flex items-center">
                                                     <Clock className="w-3.5 h-3.5 mr-1.5" />
-                                                    {session.loginTime ? new Date(session.loginTime).toLocaleTimeString() : 'N/A'}
+                                                    {session.login_time ? new Date(session.login_time).toLocaleTimeString() : 'N/A'}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{calculateDuration(session.loginTime)}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{calculateDuration(session.login_time)}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                     {session.status}
@@ -313,12 +409,12 @@ const AdminDashboard = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <button
-                                                    onClick={() => removeSession(session.id)}
+                                                    onClick={() => endSession(session.id)}
                                                     className="text-red-600 hover:text-red-900 flex items-center justify-end ml-auto"
-                                                    title="Disconnect User"
+                                                    title="Finish Session"
                                                 >
                                                     <XCircle className="w-4 h-4 mr-1" />
-                                                    Disconnect
+                                                    Finish
                                                 </button>
                                             </td>
                                         </tr>

@@ -1,0 +1,54 @@
+
+C:\Users\HP\Desktop\New folder\BS1\frontend\src\Booking.jsx
+  15:13  error  Error: Cannot access variable before it is declared
+
+`fetchRooms` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  13 |     useEffect(() => {
+  14 |         if (formData.date) {
+> 15 |             fetchRooms(formData.date);
+     |             ^^^^^^^^^^ `fetchRooms` accessed before it is declared
+  16 |         }
+  17 |     }, [formData.date]);
+  18 |
+
+  17 |     }, [formData.date]);
+  18 |
+> 19 |     const fetchRooms = async (date) => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 20 |         try {
+     | ^^^^^^^^^^^^^
+> 21 |             const response = await fetch(`http://localhost:3005/rooms?date=${date}`);
+     | ^^^^^^^^^^^^^
+> 22 |             const data = await response.json();
+     | ^^^^^^^^^^^^^
+> 23 |             setAvailableRooms(data);
+     | ^^^^^^^^^^^^^
+> 24 |         } catch (error) {
+     | ^^^^^^^^^^^^^
+> 25 |             console.error("Failed to fetch rooms:", error);
+     | ^^^^^^^^^^^^^
+> 26 |         }
+     | ^^^^^^^^^^^^^
+> 27 |     };
+     | ^^^^^^^ `fetchRooms` is declared here
+  28 |
+  29 |     const handleChange = (e) => {
+  30 |         setFormData({ ...formData, [e.target.name]: e.target.value });  react-hooks/immutability
+  60:18  error  'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        no-unused-vars
+
+C:\Users\HP\Desktop\New folder\BS1\frontend\src\pages\AdminDashboard.jsx
+  14:12  error  'loading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\HP\Desktop\New folder\BS1\frontend\src\pages\AdminLogin.jsx
+  47:18  error  'err' is defined but never used  no-unused-vars
+
+C:\Users\HP\Desktop\New folder\BS1\frontend\src\pages\Dashboard.jsx
+  44:8  warning  React Hook useEffect has a missing dependency: 'fetchRooms'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  98:8  warning  React Hook useEffect has a missing dependency: 'fetchRooms'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\HP\Desktop\New folder\BS1\frontend\src\pages\Signup.jsx
+  23:33  error  'e' is defined but never used  no-unused-vars
+
+✖ 7 problems (5 errors, 2 warnings)
+

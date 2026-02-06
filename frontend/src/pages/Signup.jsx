@@ -21,7 +21,6 @@ const Signup = () => {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
         setError('');
 
         // Validate passwords match
@@ -39,7 +38,7 @@ const Signup = () => {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:3000/signup', {
+            const response = await fetch('http://localhost:3005/signup', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
