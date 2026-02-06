@@ -15,7 +15,9 @@ app.use(cors({
         process.env.FRONTEND_URL || 'http://localhost:5173',
         'http://127.0.0.1:5173',
         'http://localhost:5174',
-        'http://127.0.0.1:5174'
+        'http://127.0.0.1:5174',
+        'http://[::1]:5173',
+        'http://[::1]:5174'
     ],
     credentials: true
 }));
@@ -24,7 +26,7 @@ app.use(cors({
 const db = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
-    password: process.env.DB_PASS,
+    password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     waitForConnections: true,
     connectionLimit: 10,
@@ -110,7 +112,7 @@ app.post('/signup', async (req, res) => {
                 <p>Best regards,<br><strong>SwahiliPot Hub Team</strong></p>
             </div>
             `
-        );
+        ).catch(err => console.error('Welcome email failed:', err));
 
         res.status(201).json({
             message: 'User registered successfully',
@@ -125,7 +127,8 @@ app.post('/signup', async (req, res) => {
 
 // LOGIN ROUTE
 app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+    const { email: rawEmail, password } = req.body;
+    const email = rawEmail?.trim();
 
     if (!email || !password) {
         return res.status(400).json({ error: 'Email and password are required' });
@@ -304,10 +307,9 @@ app.post('/book', async (req, res) => {
 
         console.log(`✅ ${bookingType === 'reservation' ? 'Reservation' : 'Booking'} created: Room ${room.name} by ${user.email}`);
 
-        // Send email to admin
         const adminEmail = process.env.ADMIN_EMAIL;
         if (adminEmail) {
-            sendMail(
+            await sendMail(
                 adminEmail,
                 `New Room ${bookingType === 'reservation' ? 'Reservation' : 'Booking'} Request`,
                 `New ${bookingType} request:\n\nRoom: ${room.name}\nUser: ${user.full_name} (${user.email})\nDate: ${date}\nTime: ${startTime} - ${endTime}`,
@@ -350,7 +352,7 @@ app.post('/book', async (req, res) => {
         }
 
         // Send confirmation email to user
-        sendMail(
+        await sendMail(
             user.email,
             `Room ${bookingType === 'reservation' ? 'Reservation' : 'Booking'} Confirmation`,
             `Hello ${user.full_name},\n\nYour ${bookingType} request has been received!\n\nRoom: ${room.name}\nDate: ${date}\nTime: ${startTime} - ${endTime}\n\nYou will receive a confirmation once reviewed.\n\nBest regards,\nSwahiliPot Hub Team`,
@@ -421,6 +423,102 @@ app.get('/admin/bookings', async (req, res) => {
     } catch (error) {
         console.error('Get admin bookings error:', error);
         res.status(500).json({ error: 'Failed to fetch admin bookings' });
+    }
+});
+
+// GET ALL SESSIONS (Admin Only)
+app.get('/admin/sessions', async (req, res) => {
+    try {
+        const [sessions] = await dbPromise.query(
+            `SELECT 
+                s.id,
+                s.login_time,
+                s.status,
+                u.email,
+                u.full_name,
+                r.name as room_name,
+                r.id as room_id
+            FROM active_sessions s
+            JOIN users u ON s.user_id = u.id
+            JOIN rooms r ON s.room_id = r.id
+            WHERE s.status = 'active'
+            ORDER BY s.login_time DESC`
+        );
+        res.json(sessions);
+    } catch (error) {
+        console.error('Get admin sessions error:', error);
+        res.status(500).json({ error: 'Failed to fetch active sessions' });
+    }
+});
+
+// START SESSION
+app.post('/admin/sessions/start', async (req, res) => {
+    const { userId, roomId, bookingId } = req.body;
+
+    if (!userId || !roomId) {
+        return res.status(400).json({ error: 'User ID and Room ID are required' });
+    }
+
+    try {
+        // Mark room as Booked if it's not already
+        await dbPromise.query(
+            'UPDATE rooms SET status = "Booked" WHERE id = ?',
+            [roomId]
+        );
+
+        // Create active session
+        const [result] = await dbPromise.query(
+            'INSERT INTO active_sessions (user_id, room_id, booking_id, status) VALUES (?, ?, ?, "active")',
+            [userId, roomId, bookingId || null]
+        );
+
+        res.status(201).json({
+            message: 'Session started successfully',
+            sessionId: result.insertId
+        });
+    } catch (error) {
+        console.error('Start session error:', error);
+        res.status(500).json({ error: 'Failed to start session' });
+    }
+});
+
+// END SESSION
+app.post('/admin/sessions/end', async (req, res) => {
+    const { sessionId } = req.body;
+
+    if (!sessionId) {
+        return res.status(400).json({ error: 'Session ID is required' });
+    }
+
+    try {
+        // Get session details first to find the room
+        const [sessions] = await dbPromise.query(
+            'SELECT room_id FROM active_sessions WHERE id = ?',
+            [sessionId]
+        );
+
+        if (sessions.length === 0) {
+            return res.status(404).json({ error: 'Session not found' });
+        }
+
+        const roomId = sessions[0].room_id;
+
+        // Mark room as Available
+        await dbPromise.query(
+            'UPDATE rooms SET status = "Available" WHERE id = ?',
+            [roomId]
+        );
+
+        // Update session status to inactive
+        await dbPromise.query(
+            'UPDATE active_sessions SET status = "inactive" WHERE id = ?',
+            [sessionId]
+        );
+
+        res.json({ message: 'Session ended successfully, room is now available' });
+    } catch (error) {
+        console.error('End session error:', error);
+        res.status(500).json({ error: 'Failed to end session' });
     }
 });
 
@@ -498,7 +596,7 @@ nodeCron.schedule('*/30 * * * *', async () => {
                     <p>We look forward to seeing you!</p>
                 </div>
                 `
-            );
+            ).catch(err => console.error(`Reminder email failed for ${booking.email}:`, err));
         }
     } catch (error) {
         console.error('Reminder cron error:', error);

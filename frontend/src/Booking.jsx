@@ -9,22 +9,22 @@ const Booking = () => {
     const [availableRooms, setAvailableRooms] = useState([]);
     const [status, setStatus] = useState('');
 
+    const fetchRooms = async (date) => {
+        try {
+            const response = await fetch(`http://localhost:3005/rooms?date=${date}`);
+            const data = await response.json();
+            setAvailableRooms(data);
+        } catch (err) {
+            console.error("Failed to fetch rooms:", err);
+        }
+    };
+
     // Fetch rooms when date changes
     useEffect(() => {
         if (formData.date) {
             fetchRooms(formData.date);
         }
     }, [formData.date]);
-
-    const fetchRooms = async (date) => {
-        try {
-            const response = await fetch(`http://localhost:3000/rooms?date=${date}`);
-            const data = await response.json();
-            setAvailableRooms(data);
-        } catch (error) {
-            console.error("Failed to fetch rooms:", error);
-        }
-    };
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -35,7 +35,7 @@ const Booking = () => {
         setStatus('Sending booking request...');
 
         try {
-            const response = await fetch('http://localhost:3000/book', {
+            const response = await fetch('http://localhost:3005/book', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Building2, User } from 'lucide-react';
 
@@ -10,6 +10,14 @@ const Login = () => {
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [userName, setUserName] = useState('');
+
+    useEffect(() => {
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+        if (storedUser && storedUser.full_name) {
+            setUserName(storedUser.full_name);
+        }
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -23,7 +31,7 @@ const Login = () => {
         setError('');
 
         try {
-            const response = await fetch('http://127.0.0.1:3000/login', {
+            const response = await fetch('http://localhost:3005/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -72,10 +80,20 @@ const Login = () => {
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                         <User className="text-blue-600 w-8 h-8" />
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                        Welcome Back <User className="w-5 h-5 text-blue-500" />
+                    <h1 className="text-2xl font-bold text-gray-900 flex flex-col items-center gap-1 text-center">
+                        {userName ? (
+                            <>
+                                <span className="text-blue-600 block mb-1">"{userName}"</span>
+                                <span className="text-lg">welcome back to swahili port hub booking system</span>
+                            </>
+                        ) : (
+                            <>
+                                <span>Welcome Back</span>
+                                <User className="w-5 h-5 text-blue-500 inline-block ml-1" />
+                            </>
+                        )}
                     </h1>
-                    <p className="text-gray-500 mt-2">Sign in to your account to book rooms</p>
+                    {!userName && <p className="text-gray-500 mt-2">Sign in to your account to book rooms</p>}
                 </div>
 
                 {error && (
