@@ -13,6 +13,42 @@ const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('rooms'); // 'rooms', 'users', or 'bookings'
     const [loading, setLoading] = useState(false);
 
+<<<<<<< HEAD
+=======
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            // Fetch Rooms for Today (to get dynamic status)
+            const today = new Date().toLocaleDateString('en-CA');
+            const roomsRes = await fetch(`http://localhost:3000/rooms?date=${today}`);
+            const roomsData = await roomsRes.json();
+            setRooms(roomsData);
+
+            // Fetch Admin Bookings
+            const bookingsRes = await fetch('http://localhost:3000/admin/bookings');
+            const bookingsData = await bookingsRes.json();
+            setBookings(bookingsData);
+
+            // Sessions still from local for now as per previous mock logic
+            const storedSessions = JSON.parse(localStorage.getItem('activeSessions')) || [];
+            setActiveSessions(storedSessions);
+        } catch (err) {
+            console.error('Error fetching admin data:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || user.role !== 'admin') {
+            navigate('/login');
+            return;
+        }
+        fetchData();
+    }, [navigate]);
+
+>>>>>>> 7022b8d25fbb5adc4bbca9dfc6ba8aa0474833c2
     const calculateDuration = (loginTime) => {
         if (!loginTime) return 'Unknown';
         try {
@@ -30,6 +66,7 @@ const AdminDashboard = () => {
         }
     };
 
+<<<<<<< HEAD
     const endSession = async (sessionId) => {
         try {
             const response = await fetch('http://localhost:3005/admin/sessions/end', {
@@ -79,6 +116,14 @@ const AdminDashboard = () => {
             console.error('Error starting session:', err);
             alert('Network error while starting session');
         }
+=======
+    const removeSession = (id) => {
+        const updatedSessions = activeSessions.filter(s => s.id !== id);
+        setActiveSessions(updatedSessions);
+        // We'll keep sessions in local for now as backend doesn't track them yet, 
+        // but we're moving rooms to DB
+        localStorage.setItem('activeSessions', JSON.stringify(updatedSessions));
+>>>>>>> 7022b8d25fbb5adc4bbca9dfc6ba8aa0474833c2
     };
 
     const handleLogout = () => {
@@ -86,16 +131,44 @@ const AdminDashboard = () => {
         navigate('/login');
     };
 
-    const deleteRoom = (id) => {
-        const updatedRooms = rooms.filter(r => r.id !== id);
-        setRooms(updatedRooms);
-        localStorage.setItem('rooms', JSON.stringify(updatedRooms));
+    const deleteRoom = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this room? This will also delete all its bookings.')) return;
+
+        try {
+            const res = await fetch(`http://localhost:3000/rooms/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                setRooms(prev => prev.filter(r => r.id !== id));
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to delete room');
+            }
+        } catch (err) {
+            alert('Error connecting to server');
+        }
     };
 
-    const handleAddRoom = (newRoom) => {
-        const updatedRooms = [...rooms, newRoom];
-        setRooms(updatedRooms);
-        localStorage.setItem('rooms', JSON.stringify(updatedRooms));
+    const handleAddRoom = async (roomData) => {
+        try {
+            const res = await fetch('http://localhost:3000/rooms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(roomData)
+            });
+
+            if (res.ok) {
+                const newRoom = await res.json();
+                setRooms(prev => [...prev, newRoom]);
+                setIsModalOpen(false);
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to add room');
+            }
+        } catch (err) {
+            alert('Error connecting to server');
+        }
     };
 
     const fetchData = async () => {

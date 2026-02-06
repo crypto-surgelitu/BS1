@@ -14,9 +14,13 @@ const Dashboard = () => {
     const [currentView, setCurrentView] = useState('available');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+<<<<<<< HEAD
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [activeBooking, setActiveBooking] = useState(null);
     const [countdown, setCountdown] = useState('');
+=======
+    const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString('en-CA'));
+>>>>>>> 7022b8d25fbb5adc4bbca9dfc6ba8aa0474833c2
 
     const fetchRooms = async () => {
         setLoading(true);
@@ -126,8 +130,8 @@ const Dashboard = () => {
         const matchesSearch = room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             room.amenities.some(amenity => amenity.toLowerCase().includes(searchTerm.toLowerCase()));
 
-        // We still filter for 'Reserved' and 'Booked' locally for those specific UI views if needed,
-        // although in a full DB app these would likely be separate API queries too.
+        // In available view, the backend already marks things correctly.
+        // But for 'reserved' and 'booked' tabs, we filter based on the dynamic status returned.
         if (currentView === 'available') return matchesSearch;
 
         const matchesView = currentView === 'reserved' ? room.status === 'Reserved' :
