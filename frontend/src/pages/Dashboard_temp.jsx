@@ -17,6 +17,7 @@ const Dashboard = () => {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [activeBooking, setActiveBooking] = useState(null);
     const [countdown, setCountdown] = useState('');
+    const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString('en-CA'));
 
     const fetchRooms = async () => {
         setLoading(true);
