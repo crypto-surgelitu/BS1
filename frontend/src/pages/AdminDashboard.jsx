@@ -16,14 +16,16 @@ const AdminDashboard = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            // Fetch Rooms for Today (to get dynamic status)
-            const today = new Date().toLocaleDateString('en-CA');
-            const roomsRes = await fetch(`http://localhost:3000/rooms?date=${today}`);
+            // Fetch Rooms
+            const roomsRes = await fetch('http://localhost:3000/rooms');
             const roomsData = await roomsRes.json();
             setRooms(roomsData);
 
             // Fetch Admin Bookings
-            const bookingsRes = await fetch('http://localhost:3000/admin/bookings');
+            const user = JSON.parse(localStorage.getItem('user'));
+            const bookingsRes = await fetch('http://localhost:3000/admin/bookings', {
+                headers: { 'X-User-Id': user?.id }
+            });
             const bookingsData = await bookingsRes.json();
             setBookings(bookingsData);
 
@@ -66,8 +68,6 @@ const AdminDashboard = () => {
     const removeSession = (id) => {
         const updatedSessions = activeSessions.filter(s => s.id !== id);
         setActiveSessions(updatedSessions);
-        // We'll keep sessions in local for now as backend doesn't track them yet, 
-        // but we're moving rooms to DB
         localStorage.setItem('activeSessions', JSON.stringify(updatedSessions));
     };
 
@@ -77,81 +77,71 @@ const AdminDashboard = () => {
     };
 
     const deleteRoom = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this room? This will also delete all its bookings.')) return;
-
         try {
-            const res = await fetch(`http://localhost:3000/rooms/${id}`, {
-                method: 'DELETE'
+            const user = JSON.parse(localStorage.getItem('user'));
+            const res = await fetch(`http://localhost:3000/admin/rooms/${id}`, {
+                method: 'DELETE',
+                headers: { 'X-User-Id': user?.id }
             });
 
             if (res.ok) {
-                setRooms(prev => prev.filter(r => r.id !== id));
+                setRooms(rooms.filter(r => r.id !== id));
             } else {
-                const data = await res.json();
-                alert(data.error || 'Failed to delete room');
+                const error = await res.json();
+                alert(error.error || 'Failed to delete room');
             }
         } catch (err) {
-            alert('Error connecting to server');
+            console.error('Error deleting room:', err);
         }
     };
 
-    const handleAddRoom = async (roomData) => {
+    const handleAddRoom = async (newRoom) => {
         try {
-            const res = await fetch('http://localhost:3000/rooms', {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const res = await fetch('http://localhost:3000/admin/rooms', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(roomData)
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Id': user?.id
+                },
+                body: JSON.stringify(newRoom),
             });
 
             if (res.ok) {
-                const newRoom = await res.json();
-                setRooms(prev => [...prev, newRoom]);
+                const data = await res.json();
+                setRooms([...rooms, { ...newRoom, id: data.roomId }]);
                 setIsModalOpen(false);
             } else {
-                const data = await res.json();
-                alert(data.error || 'Failed to add room');
+                const error = await res.json();
+                alert(error.error || 'Failed to add room');
             }
         } catch (err) {
-            alert('Error connecting to server');
+            console.error('Error adding room:', err);
         }
     };
 
-    const handleUpdateStatus = async (bookingId, newStatus) => {
-        const action = newStatus === 'confirmed' ? 'approve' : 'reject';
-        if (!window.confirm(`Are you sure you want to ${action} this booking?`)) return;
-
+    const updateBookingStatus = async (id, status) => {
         try {
-            const res = await fetch(`http://localhost:3000/bookings/${bookingId}/status`, {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const res = await fetch(`http://localhost:3000/admin/bookings/${id}/status`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Id': user?.id
+                },
+                body: JSON.stringify({ status }),
             });
 
             if (res.ok) {
-                // Update local state to reflect change instantly
-                setBookings(prev => prev.map(b =>
-                    b.id === bookingId ? { ...b, status: newStatus } : b
-                ));
-
-                // If confirmed, we might want to refresh rooms to show it as taken if it's for today
-                const today = new Date().toLocaleDateString('en-CA');
-                const bookingDate = bookings.find(b => b.id === bookingId)?.booking_date;
-
-                if (bookingDate && bookingDate.includes(today)) {
-                    // Refresh rooms to update status
-                    const roomsRes = await fetch(`http://localhost:3000/rooms?date=${today}`);
-                    const roomsData = await roomsRes.json();
-                    setRooms(roomsData);
-                }
-
-                alert(`Booking ${action}d successfully and user notified!`);
+                // Refresh data to show updated status
+                fetchData();
             } else {
-                const data = await res.json();
-                alert(data.error || `Failed to ${action} booking`);
+                const error = await res.json();
+                alert(error.error || 'Failed to update booking status');
             }
         } catch (err) {
-            console.error(err);
-            alert('Error connecting to server');
+            console.error('Error updating booking status:', err);
+            alert('An error occurred. Please try again.');
         }
     };
 
@@ -292,7 +282,7 @@ const AdminDashboard = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase ${booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
                                                 booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                                                     'bg-red-100 text-red-800'
                                                 }`}>
@@ -303,13 +293,13 @@ const AdminDashboard = () => {
                                             {booking.status === 'pending' && (
                                                 <>
                                                     <button
-                                                        onClick={() => handleUpdateStatus(booking.id, 'confirmed')}
+                                                        onClick={() => updateBookingStatus(booking.id, 'confirmed')}
                                                         className="text-green-600 hover:text-green-900 mr-3 font-bold"
                                                     >
                                                         Approve
                                                     </button>
                                                     <button
-                                                        onClick={() => handleUpdateStatus(booking.id, 'rejected')}
+                                                        onClick={() => updateBookingStatus(booking.id, 'rejected')}
                                                         className="text-red-600 hover:text-red-900 font-bold"
                                                     >
                                                         Reject

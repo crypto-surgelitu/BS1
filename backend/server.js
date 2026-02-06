@@ -4,6 +4,7 @@ const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 const nodeCron = require('node-cron');
+const nodemailer = require('nodemailer');
 const sendMail = require('./mailer');
 
 const app = express();
@@ -38,6 +39,26 @@ db.getConnection((err, connection) => {
         connection.release();
     }
 });
+
+// Admin Authorization Middleware
+const adminAuth = async (req, res, next) => {
+    const userId = req.headers['x-user-id'];
+
+    if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized: User ID required' });
+    }
+
+    try {
+        const [users] = await dbPromise.query('SELECT role FROM users WHERE id = ?', [userId]);
+        if (users.length === 0 || users[0].role !== 'admin') {
+            return res.status(403).json({ error: 'Access denied: Admin privileges required' });
+        }
+        next();
+    } catch (error) {
+        console.error('Auth middleware error:', error);
+        res.status(500).json({ error: 'Internal server error during authorization' });
+    }
+};
 
 // ============================================
 // ROUTES
@@ -512,7 +533,7 @@ app.put('/bookings/:id/status', async (req, res) => {
 });
 
 // GET ALL BOOKINGS (Admin Only)
-app.get('/admin/bookings', async (req, res) => {
+app.get('/admin/bookings', adminAuth, async (req, res) => {
     try {
         const [bookings] = await dbPromise.query(
             `SELECT 
@@ -537,6 +558,126 @@ app.get('/admin/bookings', async (req, res) => {
     } catch (error) {
         console.error('Get admin bookings error:', error);
         res.status(500).json({ error: 'Failed to fetch admin bookings' });
+    }
+});
+
+// UPDATE BOOKING STATUS (Admin Only)
+app.put('/admin/bookings/:id/status', adminAuth, async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['confirmed', 'rejected'].includes(status)) {
+        return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    try {
+        // Get booking and user details first for email
+        const [bookings] = await dbPromise.query(
+            `SELECT b.*, u.full_name, u.email, r.name as room_name 
+             FROM bookings b
+             JOIN users u ON b.user_id = u.id
+             JOIN rooms r ON b.room_id = r.id
+             WHERE b.id = ?`,
+            [id]
+        );
+
+        if (bookings.length === 0) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        const booking = bookings[0];
+
+        // LOGIC GUARD: Only allow updates if current status is 'pending'
+        if (booking.status !== 'pending') {
+            return res.status(400).json({
+                error: `Cannot update booking. Current status is already '${booking.status}'`
+            });
+        }
+
+        // Update status
+        await dbPromise.query(
+            'UPDATE bookings SET status = ? WHERE id = ?',
+            [status, id]
+        );
+
+        console.log(`✅ Booking ${id} status updated to: ${status}`);
+
+        // Send notification email to user
+        const statusText = status === 'confirmed' ? 'Approved' : 'Rejected';
+        const statusColor = status === 'confirmed' ? '#10B981' : '#EF4444';
+
+        sendMail(
+            booking.email,
+            `Room Booking Update: ${statusText}`,
+            `Hello ${booking.full_name},\n\nYour booking request for ${booking.room_name} on ${booking.booking_date} has been ${statusText}.\n\nBest regards,\nSwahiliPot Hub Team`,
+            `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
+                <h2 style="color: #0B4F6C; border-bottom: 2px solid #0B4F6C; padding-bottom: 10px;">Booking Update</h2>
+                <p>Hello <strong>${booking.full_name}</strong>,</p>
+                <p>There is an update regarding your room booking request.</p>
+                
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 5px solid ${statusColor};">
+                    <p style="margin: 5px 0;"><strong>Space:</strong> ${booking.room_name}</p>
+                    <p style="margin: 5px 0;"><strong>Date:</strong> ${booking.booking_date}</p>
+                    <p style="margin: 5px 0;"><strong>Time Slot:</strong> ${booking.start_time} - ${booking.end_time}</p>
+                    <p style="margin: 10px 0; font-size: 18px;"><strong>Status: <span style="color: ${statusColor}; text-transform: uppercase;">${statusText}</span></strong></p>
+                </div>
+
+                <p>${status === 'confirmed' ? 'We look forward to seeing you!' : 'If you have any questions, please contact the administration.'}</p>
+                
+                <div style="margin-top: 30px; font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 10px;">
+                    This is an automated message from SwahiliPot Hub Room Booking System.
+                </div>
+            </div>
+            `
+        );
+
+        res.json({ message: `Booking status updated to ${status}` });
+    } catch (error) {
+        console.error('Update booking status error:', error);
+        res.status(500).json({ error: 'Failed to update booking status' });
+    }
+});
+
+// ADD NEW ROOM (Admin Only)
+app.post('/admin/rooms', adminAuth, async (req, res) => {
+    const { name, space, capacity, amenities } = req.body;
+
+    if (!name || !space || !capacity) {
+        return res.status(400).json({ error: 'Name, space, and capacity are required' });
+    }
+
+    try {
+        const [result] = await dbPromise.query(
+            'INSERT INTO rooms (name, space, capacity, amenities, status) VALUES (?, ?, ?, ?, ?)',
+            [name, space, capacity, JSON.stringify(amenities || []), 'Available']
+        );
+
+        res.status(201).json({
+            message: 'Room added successfully',
+            roomId: result.insertId
+        });
+    } catch (error) {
+        console.error('Add room error:', error);
+        res.status(500).json({ error: 'Failed to add room' });
+    }
+});
+
+// DELETE ROOM (Admin Only)
+app.delete('/admin/rooms/:id', adminAuth, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const [result] = await dbPromise.query('DELETE FROM rooms WHERE id = ?', [id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Room not found' });
+        }
+
+        res.json({ message: 'Room deleted successfully' });
+    } catch (error) {
+        console.error('Delete room error:', error);
+        res.status(500).json({ error: 'Failed to delete room' });
     }
 });
 
