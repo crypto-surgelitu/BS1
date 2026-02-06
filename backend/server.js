@@ -452,6 +452,8 @@ app.get('/admin/bookings', async (req, res) => {
                 b.type,
                 b.status,
                 b.created_at,
+                b.user_id,
+                b.room_id,
                 r.name as room_name,
                 r.space,
                 u.full_name as user_name,
@@ -466,6 +468,132 @@ app.get('/admin/bookings', async (req, res) => {
     } catch (error) {
         console.error('Get admin bookings error:', error);
         res.status(500).json({ error: 'Failed to fetch admin bookings' });
+    }
+});
+
+// APPROVE BOOKING (Admin Only)
+app.post('/admin/bookings/:id/approve', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // Get booking details
+        const [bookings] = await dbPromise.query(
+            `SELECT b.*, u.full_name, u.email, r.name as room_name
+             FROM bookings b
+             JOIN users u ON b.user_id = u.id
+             JOIN rooms r ON b.room_id = r.id
+             WHERE b.id = ?`,
+            [id]
+        );
+
+        if (bookings.length === 0) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        const booking = bookings[0];
+
+        // Update booking status to confirmed
+        await dbPromise.query(
+            'UPDATE bookings SET status = ? WHERE id = ?',
+            ['confirmed', id]
+        );
+
+        console.log(`✅ Booking approved: ${booking.room_name} for ${booking.full_name}`);
+
+        // Send confirmation email to user
+        await sendMail(
+            booking.email,
+            'Booking Approved - SwahiliPot Hub',
+            `Hello ${booking.full_name},\n\nYour booking has been approved!\n\nRoom: ${booking.room_name}\nDate: ${booking.booking_date}\nTime: ${booking.start_time} - ${booking.end_time}\n\nSee you soon!\n\nBest regards,\nSwahiliPot Hub Team`,
+            `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #4CAF50; padding: 20px; border-radius: 10px;">
+                <h2 style="color: #4CAF50; border-bottom: 2px solid #4CAF50; padding-bottom: 10px;">✅ Booking Approved!</h2>
+                <p>Hello <strong>${booking.full_name}</strong>,</p>
+                <p>Great news! Your booking request has been <strong>approved</strong>.</p>
+                
+                <div style="background: #f0f9f0; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4CAF50;">
+                    <h3 style="margin-top: 0; color: #333;">Booking Details:</h3>
+                    <p style="margin: 5px 0;"><strong>Room:</strong> ${booking.room_name}</p>
+                    <p style="margin: 5px 0;"><strong>Date:</strong> ${booking.booking_date}</p>
+                    <p style="margin: 5px 0;"><strong>Time:</strong> ${booking.start_time} - ${booking.end_time}</p>
+                    <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: #4CAF50; font-weight: bold;">Confirmed</span></p>
+                </div>
+
+                <p>We look forward to seeing you!</p>
+                <div style="margin-top: 30px; font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 10px;">
+                    This is an automated message from SwahiliPot Hub Room Booking System.
+                </div>
+            </div>
+            `
+        ).catch(err => console.error('Approval email failed:', err));
+
+        res.json({ message: 'Booking approved successfully' });
+    } catch (error) {
+        console.error('Approve booking error:', error);
+        res.status(500).json({ error: 'Failed to approve booking' });
+    }
+});
+
+// REJECT BOOKING (Admin Only)
+app.post('/admin/bookings/:id/reject', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // Get booking details
+        const [bookings] = await dbPromise.query(
+            `SELECT b.*, u.full_name, u.email, r.name as room_name
+             FROM bookings b
+             JOIN users u ON b.user_id = u.id
+             JOIN rooms r ON b.room_id = r.id
+             WHERE b.id = ?`,
+            [id]
+        );
+
+        if (bookings.length === 0) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        const booking = bookings[0];
+
+        // Update booking status to rejected
+        await dbPromise.query(
+            'UPDATE bookings SET status = ? WHERE id = ?',
+            ['rejected', id]
+        );
+
+        console.log(`❌ Booking rejected: ${booking.room_name} for ${booking.full_name}`);
+
+        // Send rejection email to user
+        await sendMail(
+            booking.email,
+            'Booking Request Update - SwahiliPot Hub',
+            `Hello ${booking.full_name},\n\nWe regret to inform you that your booking request could not be approved.\n\nRoom: ${booking.room_name}\nDate: ${booking.booking_date}\nTime: ${booking.start_time} - ${booking.end_time}\n\nPlease contact us or try booking a different time slot.\n\nBest regards,\nSwahiliPot Hub Team`,
+            `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #f44336; padding: 20px; border-radius: 10px;">
+                <h2 style="color: #f44336; border-bottom: 2px solid #f44336; padding-bottom: 10px;">Booking Request Update</h2>
+                <p>Hello <strong>${booking.full_name}</strong>,</p>
+                <p>We regret to inform you that your booking request could not be approved at this time.</p>
+                
+                <div style="background: #fff3f3; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f44336;">
+                    <h3 style="margin-top: 0; color: #333;">Booking Details:</h3>
+                    <p style="margin: 5px 0;"><strong>Room:</strong> ${booking.room_name}</p>
+                    <p style="margin: 5px 0;"><strong>Date:</strong> ${booking.booking_date}</p>
+                    <p style="margin: 5px 0;"><strong>Time:</strong> ${booking.start_time} - ${booking.end_time}</p>
+                    <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: #f44336; font-weight: bold;">Not Approved</span></p>
+                </div>
+
+                <p>Please feel free to contact us or try booking a different time slot.</p>
+                <div style="margin-top: 30px; font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 10px;">
+                    This is an automated message from SwahiliPot Hub Room Booking System.
+                </div>
+            </div>
+            `
+        ).catch(err => console.error('Rejection email failed:', err));
+
+        res.json({ message: 'Booking rejected successfully' });
+    } catch (error) {
+        console.error('Reject booking error:', error);
+        res.status(500).json({ error: 'Failed to reject booking' });
     }
 });
 

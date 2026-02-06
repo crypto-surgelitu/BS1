@@ -86,6 +86,50 @@ const AdminDashboard = () => {
         navigate('/login');
     };
 
+    const approveBooking = async (bookingId) => {
+        try {
+            const response = await fetch(`http://localhost:3005/admin/bookings/${bookingId}/approve`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                fetchData(); // Refresh data
+            } else {
+                const data = await response.json();
+                console.error('Error approving booking:', data.error);
+                alert('Failed to approve booking: ' + data.error);
+            }
+        } catch (err) {
+            console.error('Error approving booking:', err);
+            alert('Network error while approving booking');
+        }
+    };
+
+    const rejectBooking = async (bookingId) => {
+        try {
+            const response = await fetch(`http://localhost:3005/admin/bookings/${bookingId}/reject`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                fetchData(); // Refresh data
+            } else {
+                const data = await response.json();
+                console.error('Error rejecting booking:', data.error);
+                alert('Failed to reject booking: ' + data.error);
+            }
+        } catch (err) {
+            console.error('Error rejecting booking:', err);
+            alert('Network error while rejecting booking');
+        }
+    };
+
     const deleteRoom = async (id) => {
         if (!window.confirm('Are you sure you want to delete this room? This will also delete all its bookings.')) return;
 
@@ -304,16 +348,30 @@ const AdminDashboard = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button className="text-green-600 hover:text-green-900 mr-3 font-bold">Approve</button>
+                                            {booking.status === 'pending' && (
+                                                <>
+                                                    <button
+                                                        onClick={() => approveBooking(booking.id)}
+                                                        className="text-green-600 hover:text-green-900 mr-3 font-bold"
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                    <button
+                                                        onClick={() => rejectBooking(booking.id)}
+                                                        className="text-red-600 hover:text-red-900 font-bold"
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </>
+                                            )}
                                             {booking.status === 'confirmed' && (
                                                 <button
                                                     onClick={() => startSession(booking)}
-                                                    className="text-blue-600 hover:text-blue-900 mr-3 font-bold"
+                                                    className="text-blue-600 hover:text-blue-900 font-bold"
                                                 >
                                                     Start Session
                                                 </button>
                                             )}
-                                            <button className="text-red-600 hover:text-red-900 font-bold">Reject</button>
                                         </td>
                                     </tr>
                                 )) : (
