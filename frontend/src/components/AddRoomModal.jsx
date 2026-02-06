@@ -29,24 +29,24 @@ const AddRoomModal = ({ isOpen, onClose, onAdd }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 animate-in fade-in zoom-in duration-200">
+            <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm" onClick={onClose}></div>
+            <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-8 animate-in fade-in zoom-in duration-200 border border-transparent dark:border-gray-700">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold text-gray-900">Add New Room</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X /></button>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Add New Room</h2>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X /></button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700">Room Name</label>
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Room Name</label>
                         <div className="relative">
-                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                             <input
                                 type="text"
                                 required
                                 value={roomData.name}
                                 onChange={e => setRoomData({ ...roomData, name: e.target.value })}
-                                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:bg-white transition-all outline-none"
+                                className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:focus:ring-red-600 focus:bg-white dark:focus:bg-gray-600 text-gray-900 dark:text-white transition-all outline-none placeholder-gray-400 dark:placeholder-gray-500"
                                 placeholder="Conference Room C"
                             />
                         </div>
@@ -54,29 +54,29 @@ const AddRoomModal = ({ isOpen, onClose, onAdd }) => {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-700">Space</label>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Space</label>
                             <div className="relative">
-                                <Layers className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <Layers className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                                 <input
                                     type="text"
                                     required
                                     value={roomData.space}
                                     onChange={e => setRoomData({ ...roomData, space: e.target.value })}
-                                    className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
+                                    className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:focus:ring-red-600 focus:bg-white dark:focus:bg-gray-600 text-gray-900 dark:text-white outline-none placeholder-gray-400 dark:placeholder-gray-500"
                                     placeholder="Ground Floor"
                                 />
                             </div>
                         </div>
                         <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-700">Capacity</label>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Capacity</label>
                             <div className="relative">
-                                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                                 <input
                                     type="number"
                                     required
                                     value={roomData.capacity}
                                     onChange={e => setRoomData({ ...roomData, capacity: e.target.value })}
-                                    className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
+                                    className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:focus:ring-red-600 focus:bg-white dark:focus:bg-gray-600 text-gray-900 dark:text-white outline-none"
                                     placeholder="10"
                                 />
                             </div>
@@ -84,14 +84,14 @@ const AddRoomModal = ({ isOpen, onClose, onAdd }) => {
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700">Amenities (comma separated)</label>
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Amenities (comma separated)</label>
                         <div className="relative">
-                            <Star className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <Star className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                             <input
                                 type="text"
                                 value={roomData.amenities}
                                 onChange={e => setRoomData({ ...roomData, amenities: e.target.value })}
-                                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
+                                className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:focus:ring-red-600 focus:bg-white dark:focus:bg-gray-600 text-gray-900 dark:text-white outline-none placeholder-gray-400 dark:placeholder-gray-500"
                                 placeholder="Projector, Wifi, AC"
                             />
                         </div>

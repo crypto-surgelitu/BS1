@@ -89,7 +89,7 @@ const Dashboard = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-300">
             <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
 
             <Sidebar
@@ -110,15 +110,15 @@ const Dashboard = () => {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                     <div className="flex flex-col gap-1">
-                        <h1 className="text-2xl font-bold text-gray-900">{getPageTitle()}</h1>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{getPageTitle()}</h1>
                         {currentView === 'available' && (
                             <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-500 font-medium">For Date:</span>
+                                <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">For Date:</span>
                                 <input
                                     type="date"
                                     value={selectedDate}
                                     onChange={(e) => setSelectedDate(e.target.value)}
-                                    className="text-sm border-none bg-transparent font-bold text-blue-600 focus:ring-0 cursor-pointer"
+                                    className="text-sm border-none bg-transparent font-bold text-blue-600 dark:text-blue-400 focus:ring-0 cursor-pointer"
                                 />
                             </div>
                         )}
@@ -130,7 +130,7 @@ const Dashboard = () => {
                         </div>
                         <input
                             type="text"
-                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                             placeholder="Search by room name, amenities, capacity..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -160,11 +160,11 @@ const Dashboard = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredRooms.map((room) => (
-                            <div key={room.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                            <div key={room.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
-                                        <h3 className="text-lg font-bold text-gray-900">{room.name}</h3>
-                                        <p className="text-sm text-gray-500">{room.space}</p>
+                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{room.name}</h3>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">{room.space}</p>
                                     </div>
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${room.status === 'Available' ? 'bg-green-100 text-green-800' :
                                         room.status === 'Reserved' ? 'bg-yellow-100 text-yellow-800' :
@@ -174,18 +174,18 @@ const Dashboard = () => {
                                     </span>
                                 </div>
 
-                                <div className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
+                                <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
                                     <Users className="w-4 h-4" />
                                     <span>Capacity: {room.capacity} people</span>
                                 </div>
 
                                 <div className="mb-6">
-                                    <p className="text-sm font-medium text-gray-900 mb-2">Amenities:</p>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">Amenities:</p>
                                     <div className="flex flex-wrap gap-2">
                                         {room.amenities.map((amenity, index) => (
                                             <span
                                                 key={index}
-                                                className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200"
+                                                className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600"
                                             >
                                                 {amenity}
                                             </span>
@@ -196,7 +196,7 @@ const Dashboard = () => {
                                 <div className="space-y-3">
                                     <button
                                         onClick={() => openModal(room, 'booking')}
-                                        className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-colors"
+                                        className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gray-900 dark:bg-blue-600 hover:bg-gray-800 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 dark:focus:ring-blue-600 transition-colors"
                                         disabled={room.status !== 'Available'}
                                     >
                                         <DoorOpen className="w-4 h-4 mr-2" />
@@ -204,7 +204,7 @@ const Dashboard = () => {
                                     </button>
                                     <button
                                         onClick={() => openModal(room, 'reservation')}
-                                        className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+                                        className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
                                     >
                                         <Bookmark className="w-4 h-4 mr-2" />
                                         Reserve for Later

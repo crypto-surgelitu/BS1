@@ -21,11 +21,11 @@ const Sidebar = ({ isOpen, onClose, currentView, onNavigate, onLogout }) => {
 
             {/* Sidebar Panel */}
             <div
-                className={`fixed inset-y-0 left-0 w-64 bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
+                className={`fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
                     }`}
             >
-                <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-                    <span className="text-xl font-bold text-gray-800">Menu</span>
+                <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-700">
+                    <span className="text-xl font-bold text-gray-800 dark:text-white">Menu</span>
                     <button
                         onClick={onClose}
                         className="p-1 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none"
@@ -41,21 +41,21 @@ const Sidebar = ({ isOpen, onClose, currentView, onNavigate, onLogout }) => {
                                 key={item.id}
                                 onClick={() => onNavigate(item.id)}
                                 className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${currentView === item.id
-                                    ? 'bg-blue-50 text-blue-700'
-                                    : 'text-gray-700 hover:bg-gray-100'
+                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                     }`}
                             >
-                                <item.icon className={`w-5 h-5 mr-3 ${currentView === item.id ? 'text-blue-700' : 'text-gray-400'
+                                <item.icon className={`w-5 h-5 mr-3 ${currentView === item.id ? 'text-blue-700 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'
                                     }`} />
                                 {item.label}
                             </button>
                         ))}
                     </nav>
 
-                    <div className="border-t border-gray-200 pt-4">
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                         <button
                             onClick={onLogout}
-                            className="w-full flex items-center px-4 py-3 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                            className="w-full flex items-center px-4 py-3 text-sm font-medium text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                         >
                             <LogOut className="w-5 h-5 mr-3" />
                             Logout

@@ -77,19 +77,19 @@ const BookingModal = ({ isOpen, onClose, room, type }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+                className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
                 onClick={onClose}
             ></div>
 
             {/* Modal Content */}
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200 border border-transparent dark:border-gray-700">
                 <div className="p-6">
                     <div className="flex justify-between items-start mb-6">
                         <div>
-                            <h2 className="text-2xl font-bold text-gray-900">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                                 {isReservation ? 'Reserve' : 'Book'} {room.name}
                             </h2>
-                            <p className="text-gray-500 mt-1">
+                            <p className="text-gray-500 dark:text-gray-400 mt-1">
                                 Select a date, time, and duration for your {isReservation ? 'reservation' : 'booking'}
                             </p>
                         </div>
@@ -114,7 +114,7 @@ const BookingModal = ({ isOpen, onClose, room, type }) => {
                         )}
                         {/* Date Picker */}
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-gray-700 flex items-center">
+                            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
                                 Date
                             </label>
                             <div className="relative">
@@ -122,21 +122,21 @@ const BookingModal = ({ isOpen, onClose, room, type }) => {
                                     type="date"
                                     value={formData.date}
                                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                    className="w-full bg-gray-50 border border-transparent rounded-xl px-4 py-3 text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+                                    className="w-full bg-gray-50 dark:bg-gray-700 border border-transparent dark:border-gray-600 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
                                     required
                                 />
-                                <CalendarIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                                <CalendarIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 pointer-events-none" />
                             </div>
                         </div>
 
                         {/* Start Time Select */}
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-gray-700">Start Time</label>
+                            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Start Time</label>
                             <div className="relative">
                                 <select
                                     value={formData.startTime}
                                     onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                                    className="w-full bg-gray-50 border border-transparent rounded-xl px-4 py-3 text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none appearance-none"
+                                    className="w-full bg-gray-50 dark:bg-gray-700 border border-transparent dark:border-gray-600 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-blue-500 transition-all outline-none appearance-none"
                                     required
                                 >
                                     <option value="" disabled>Select start time</option>
@@ -144,18 +144,18 @@ const BookingModal = ({ isOpen, onClose, room, type }) => {
                                         <option key={time} value={time}>{time}</option>
                                     ))}
                                 </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 pointer-events-none" />
                             </div>
                         </div>
 
                         {/* End Time Select */}
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-gray-700">End Time</label>
+                            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">End Time</label>
                             <div className="relative">
                                 <select
                                     value={formData.endTime}
                                     onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                                    className="w-full bg-gray-50 border border-transparent rounded-xl px-4 py-3 text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none appearance-none"
+                                    className="w-full bg-gray-50 dark:bg-gray-700 border border-transparent dark:border-gray-600 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-blue-500 transition-all outline-none appearance-none"
                                     required
                                 >
                                     <option value="" disabled>Select end time</option>
@@ -163,7 +163,7 @@ const BookingModal = ({ isOpen, onClose, room, type }) => {
                                         <option key={time} value={time}>{time}</option>
                                     ))}
                                 </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 pointer-events-none" />
                             </div>
                         </div>
 
@@ -189,18 +189,18 @@ const BookingModal = ({ isOpen, onClose, room, type }) => {
                         )}
 
                         {/* Footer Buttons */}
-                        <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-100">
+                        <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
+                                className="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 disabled={loading || success}
-                                className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-black hover:bg-gray-900 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-black dark:bg-blue-600 hover:bg-gray-900 dark:hover:bg-blue-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {loading ? 'Submitting...' : success ? 'Confirmed!' : `Confirm ${isReservation ? 'Reservation' : 'Booking'}`}
                             </button>
