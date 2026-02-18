@@ -12,8 +12,8 @@ const {
 // ============================================================
 // ACCOUNT LOCKOUT CONFIG
 // ============================================================
-const MAX_FAILED_ATTEMPTS = 5;
-const LOCKOUT_DURATION_MINUTES = 30;
+const MAX_FAILED_ATTEMPTS = 15;
+const LOCKOUT_DURATION_MINUTES = 10;
 
 // ============================================================
 // AUTH CONTROLLER

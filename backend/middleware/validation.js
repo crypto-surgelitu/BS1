@@ -33,19 +33,15 @@ const signupValidation = [
         .withMessage('Email must not exceed 255 characters'),
     
     body('password')
-        .isLength({ min: 8 })
-        .withMessage('Password must be at least 8 characters long')
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-        .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
+        .isLength({ min: 6 })
+        .withMessage('Password must be at least 6 characters long'),
     
     body('fullName')
         .trim()
         .notEmpty()
         .withMessage('Full name is required')
         .isLength({ min: 2, max: 100 })
-        .withMessage('Full name must be between 2 and 100 characters')
-        .matches(/^[a-zA-Z\s'-]+$/)
-        .withMessage('Full name can only contain letters, spaces, hyphens, and apostrophes'),
+        .withMessage('Full name must be between 2 and 100 characters'),
     
     body('department')
         .trim()
