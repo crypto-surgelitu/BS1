@@ -31,9 +31,15 @@ const Signup = () => {
             return;
         }
 
-        // Validate password length
-        if (formData.password.length < 6) {
-            setError('Password must be at least 6 characters');
+        // Validate password length and complexity
+        if (formData.password.length < 8) {
+            setError('Password must be at least 8 characters');
+            return;
+        }
+
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
+        if (!passwordRegex.test(formData.password)) {
+            setError('Password must contain uppercase, lowercase, number, and special character (@$!%*?&)');
             return;
         }
 
@@ -42,19 +48,24 @@ const Signup = () => {
         try {
             const response = await authService.signup(formData.email, formData.password, formData.fullName, formData.department);
 
-            const data = await response.json();
-
-            if (response.ok) {
-                // Success - redirect to login
-                alert('Account created successfully! Please login.');
-                navigate('/login');
+            if (response.success) {
+                // Success - redirect to dashboard (user is auto-logged in)
+                alert('Account created successfully!');
+                navigate('/dashboard');
             } else {
-                // Show error message from server
-                setError(data.error || 'Signup failed');
+                // Special handling for database connection errors (503)
+                if (response.status === 503) {
+                    setError('Database connection error. Please ensure MySQL is running (check XAMPP or MySQL service).');
+                } else if (Array.isArray(response.error)) {
+                    // Handle validation errors array
+                    setError(response.error.map(e => e.message).join(', '));
+                } else {
+                    setError(response.error || 'Signup failed');
+                }
             }
         } catch (err) {
             console.error('Signup error:', err);
-            setError('Network error. Please check if the backend server is running.');
+            setError('System connection failed. Please ensure the backend server is running.');
         } finally {
             setLoading(false);
         }

@@ -27,21 +27,25 @@ const AdminLogin = () => {
         try {
             const response = await authService.login(formData.email, formData.password);
 
-            const data = await response.json();
-
-            if (response.ok) {
+            if (response.success) {
+                const data = response.data;
                 if (data.user.role === 'admin') {
-                    localStorage.setItem('user', JSON.stringify(data.user));
+                    // User data already stored by authService
                     localStorage.setItem('isAdmin', 'true');
                     navigate('/admin/dashboard');
                 } else {
                     setError('Access denied. This portal is for administrators only.');
                 }
             } else {
-                setError(data.error || 'Invalid Admin Credentials');
+                // Special handling for database connection errors (503)
+                if (response.status === 503) {
+                    setError('Database connection error. Please ensure MySQL is running.');
+                } else {
+                    setError(response.error || 'Invalid Admin Credentials');
+                }
             }
         } catch (err) {
-            setError('Server connection failed. Please ensure the backend is running.');
+            setError('System connection failed. Please ensure the backend is running.');
         } finally {
             setLoading(false);
         }

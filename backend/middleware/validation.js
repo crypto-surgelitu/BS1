@@ -48,8 +48,9 @@ const signupValidation = [
         .withMessage('Full name can only contain letters, spaces, hyphens, and apostrophes'),
     
     body('department')
-        .optional()
         .trim()
+        .notEmpty()
+        .withMessage('Department is required')
         .isLength({ max: 100 })
         .withMessage('Department name must not exceed 100 characters'),
     
@@ -77,52 +78,46 @@ const loginValidation = [
  * Validation rules for creating a booking
  */
 const bookingValidation = [
+    body('userId')
+        .isInt({ min: 1 })
+        .withMessage('Valid user ID is required'),
+    
     body('roomId')
         .isInt({ min: 1 })
         .withMessage('Valid room ID is required'),
     
-    body('startTime')
-        .isISO8601()
-        .withMessage('Valid start time is required')
+    body('date')
+        .matches(/^\d{4}-\d{2}-\d{2}$/)
+        .withMessage('Valid date in YYYY-MM-DD format is required')
         .custom((value) => {
-            const startTime = new Date(value);
-            const now = new Date();
-            if (startTime < now) {
-                throw new Error('Start time cannot be in the past');
+            const bookingDate = new Date(value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (bookingDate < today) {
+                throw new Error('Cannot book for past dates');
             }
             return true;
         }),
+    
+    body('startTime')
+        .matches(/^\d{2}:\d{2}(:\d{2})?$/)
+        .withMessage('Valid start time in HH:MM format is required'),
     
     body('endTime')
-        .isISO8601()
-        .withMessage('Valid end time is required')
+        .matches(/^\d{2}:\d{2}(:\d{2})?$/)
+        .withMessage('Valid end time in HH:MM format is required')
         .custom((value, { req }) => {
-            const startTime = new Date(req.body.startTime);
-            const endTime = new Date(value);
-            
-            if (endTime <= startTime) {
+            const start = req.body.startTime;
+            if (value <= start) {
                 throw new Error('End time must be after start time');
             }
-            
-            const duration = (endTime - startTime) / (1000 * 60 * 60); // hours
-            if (duration > 8) {
-                throw new Error('Booking duration cannot exceed 8 hours');
-            }
-            
             return true;
         }),
     
-    body('purpose')
-        .trim()
-        .notEmpty()
-        .withMessage('Purpose is required')
-        .isLength({ min: 10, max: 500 })
-        .withMessage('Purpose must be between 10 and 500 characters'),
-    
-    body('attendees')
+    body('type')
         .optional()
-        .isInt({ min: 1, max: 1000 })
-        .withMessage('Number of attendees must be between 1 and 1000'),
+        .isIn(['booking', 'reservation'])
+        .withMessage('Type must be either booking or reservation'),
     
     handleValidationErrors
 ];
@@ -138,6 +133,13 @@ const roomValidation = [
         .isLength({ min: 2, max: 100 })
         .withMessage('Room name must be between 2 and 100 characters'),
     
+    body('space')
+        .trim()
+        .notEmpty()
+        .withMessage('Space/location is required')
+        .isLength({ min: 2, max: 100 })
+        .withMessage('Space must be between 2 and 100 characters'),
+    
     body('capacity')
         .isInt({ min: 1, max: 1000 })
         .withMessage('Capacity must be between 1 and 1000'),
@@ -146,12 +148,6 @@ const roomValidation = [
         .optional()
         .isArray()
         .withMessage('Amenities must be an array'),
-    
-    body('description')
-        .optional()
-        .trim()
-        .isLength({ max: 1000 })
-        .withMessage('Description must not exceed 1000 characters'),
     
     handleValidationErrors
 ];
@@ -176,8 +172,8 @@ const bookingStatusValidation = [
         .withMessage('Invalid booking ID'),
     
     body('status')
-        .isIn(['pending', 'approved', 'rejected', 'cancelled'])
-        .withMessage('Status must be one of: pending, approved, rejected, cancelled'),
+        .isIn(['confirmed', 'rejected', 'cancelled'])
+        .withMessage('Status must be one of: confirmed, rejected, cancelled'),
     
     body('adminNotes')
         .optional()

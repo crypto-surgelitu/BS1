@@ -12,6 +12,17 @@ const authService = {
 
         if (response.ok) {
             const data = await response.json();
+
+            // Check if 2FA is required
+            if (data.require2fa) {
+                return {
+                    success: true,
+                    require2fa: true,
+                    tempToken: data.tempToken,
+                    userId: data.userId
+                };
+            }
+
             // Store tokens and user data
             saveTokens(data.accessToken, data.refreshToken);
             localStorage.setItem('user', JSON.stringify(data.user));
@@ -19,7 +30,7 @@ const authService = {
         }
 
         const error = await response.json();
-        return { success: false, error: error.error };
+        return { success: false, error: error.error, status: response.status };
     },
 
     /**
@@ -40,7 +51,7 @@ const authService = {
         }
 
         const error = await response.json();
-        return { success: false, error: error.error || error.details };
+        return { success: false, error: error.error || error.details, status: response.status };
     },
 
     /**
@@ -89,6 +100,26 @@ const authService = {
         }
 
         return { success: false, error: 'Failed to fetch user data' };
+    },
+
+    /**
+     * Verify 2FA code during login
+     */
+    async verify2fa(code, tempToken) {
+        const response = await apiFetch('/auth/2fa/verify', {
+            method: 'POST',
+            body: { code, tempToken },
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            saveTokens(data.accessToken, data.refreshToken);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            return { success: true, data };
+        }
+
+        const error = await response.json();
+        return { success: false, error: error.error, status: response.status };
     }
 };
 
