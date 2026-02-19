@@ -139,4 +139,7 @@ router.post('/reset-password',
     authController.resetPassword
 );
 
+// GET /generate-password - Generate a strong password suggestion
+router.get('/generate-password', authController.generatePassword);
+
 module.exports = router;

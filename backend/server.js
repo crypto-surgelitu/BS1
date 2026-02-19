@@ -6,8 +6,6 @@ const cookieParser = require('cookie-parser');
 const http = require('http');
 const { Server } = require('socket.io');
 const { dbPromise, db } = require('./config/db');
-const cluster = require('cluster');
-const os = require('os');
 const startReminderCron = require('./cron/reminderCron');
 const { apiLimiter } = require('./middleware/rateLimiter');
 const { sanitizeInput, validateContentType, validateRequestSize } = require('./middleware/sanitization');
@@ -41,7 +39,20 @@ const io = new Server(server, {
     }
 });
 
-app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://www.google.com", "https://www.gstatic.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "https://www.google.com", "https://www.gstatic.com"],
+            frameSrc: ["https://www.google.com"],
+            connectSrc: ["'self'", "https://www.google.com", "https://www.recaptcha.net"],
+        },
+    },
+}));
 
 app.use(cookieParser());
 
@@ -125,36 +136,41 @@ app.use(errorHandler);
 app.set('io', io);
 
 const PORT = process.env.PORT || 3000;
-const numCPUs = os.cpus().length;
 
-if (cluster.isMaster && process.env.NODE_ENV === 'production') {
-    console.log(`Master ${process.pid} is running`);
-    console.log(`Forking ${numCPUs} workers...`);
+// Only use clustering in production
+if (process.env.NODE_ENV === 'production') {
+    const cluster = require('cluster');
+    const os = require('os');
+    const numCPUs = os.cpus().length;
 
-    for (let i = 0; i < numCPUs; i++) {
-        cluster.fork();
-    }
+    if (cluster.isMaster) {
+        console.log(`Master ${process.pid} is running`);
+        console.log(`Forking ${numCPUs} workers...`);
 
-    cluster.on('exit', (worker, code, signal) => {
-        console.log(`Worker ${worker.process.pid} died. Forking a replacement...`);
-        cluster.fork();
-    });
-} else {
-    const server = app.listen(PORT, () => {
-        console.log(`🚀 Worker ${process.pid} running on port ${PORT}`);
-        console.log(`📊 Pool connections: ${process.env.DB_CONNECTION_LIMIT || 25}`);
-        if (cluster.isMaster) {
-            console.log(`📍 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
-            console.log(`🔒 Security middleware loaded successfully`);
+        for (let i = 0; i < numCPUs; i++) {
+            cluster.fork();
         }
-    });
 
-    server.timeout = 60000;
-    server.keepAliveTimeout = 30000;
-    server.headersTimeout = 31000;
+        cluster.on('exit', (worker, code, signal) => {
+            console.log(`Worker ${worker.process.pid} died. Forking a replacement...`);
+            cluster.fork();
+        });
+    } else {
+        startServer();
+    }
+} else {
+    // Development mode - single process
+    startServer();
+}
+
+function startServer() {
+    const server = app.listen(PORT, () => {
+        console.log(`🚀 Server running on port ${PORT}`);
+        console.log(`📍 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
+    });
 
     const gracefulShutdown = () => {
-        console.log(`\nSIGTERM/SIGINT received. Shutting down worker ${process.pid}...`);
+        console.log(`\nSIGTERM/SIGINT received. Shutting down...`);
 
         server.close(() => {
             console.log('HTTP server closed.');

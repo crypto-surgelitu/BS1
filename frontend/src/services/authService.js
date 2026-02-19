@@ -125,10 +125,10 @@ const authService = {
     /**
      * Request password reset PIN
      */
-    async forgotPassword(email) {
+    async forgotPassword(email, captchaToken) {
         const response = await apiFetch('/forgot-password', {
             method: 'POST',
-            body: { email },
+            body: { email, captchaToken },
         });
 
         if (response.ok) {
@@ -201,6 +201,22 @@ const authService = {
         }
         clearAuth();
         window.location.href = '/login';
+    },
+
+    /**
+     * Generate a strong password suggestion
+     */
+    async generatePassword(length = 16) {
+        const response = await apiFetch(`/generate-password?length=${length}`, {
+            method: 'GET',
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, password: data.password };
+        }
+
+        return { success: false, error: 'Failed to generate password' };
     }
 };
 

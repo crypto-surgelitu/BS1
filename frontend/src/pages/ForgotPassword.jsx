@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, ArrowLeft, CheckCircle, RotateCcw, RefreshCw } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle, RotateCcw } from 'lucide-react';
 import authService from '../services/authService';
+
+const RECAPTCHA_SITE_KEY = '6Ld9vHAsAAAAALZLg1TvrkYJCA9WiPkNU2Ml_s83';
 
 const ForgotPassword = () => {
     const navigate = useNavigate();
@@ -9,50 +11,79 @@ const ForgotPassword = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
-    const [captchaVerified, setCaptchaVerified] = useState(false);
-    const [captchaError, setCaptchaError] = useState('');
-    
-    const [num1] = useState(() => Math.floor(Math.random() * 10) + 1);
-    const [num2] = useState(() => Math.floor(Math.random() * 10) + 1);
-    const [captchaAnswer, setCaptchaAnswer] = useState('');
-    const [captchaInput, setCaptchaInput] = useState('');
-
-    const refreshCaptcha = () => {
-        setCaptchaAnswer(String(num1 + num2));
-        setCaptchaInput('');
-        setCaptchaVerified(false);
-    };
+    const [recaptchaReady, setRecaptchaReady] = useState(false);
+    const recaptchaRef = useRef(null);
+    const widgetId = useRef(null);
 
     useEffect(() => {
-        setCaptchaAnswer(String(num1 + num2));
-    }, [num1, num2]);
+        const loadRecaptcha = () => {
+            if (window.grecaptcha && window.grecaptcha.render) {
+                setRecaptchaReady(true);
+            } else {
+                // Poll for grecaptcha to be fully loaded
+                const checkRecaptcha = setInterval(() => {
+                    if (window.grecaptcha && window.grecaptcha.render) {
+                        clearInterval(checkRecaptcha);
+                        setRecaptchaReady(true);
+                    }
+                }, 100);
+                
+                // Safety timeout
+                setTimeout(() => clearInterval(checkRecaptcha), 5000);
+            }
+        };
 
-    const verifyCaptcha = () => {
-        if (captchaInput.trim() === captchaAnswer) {
-            setCaptchaVerified(true);
-            setCaptchaError('');
+        if (!window.grecaptcha) {
+            const script = document.createElement('script');
+            script.src = 'https://www.google.com/recaptcha/api.js?render=explicit';
+            script.async = true;
+            script.defer = true;
+            script.onload = loadRecaptcha;
+            script.onerror = () => {
+                console.error('Failed to load reCAPTCHA script');
+                setError('Failed to load captcha. Please refresh and try again.');
+            };
+            document.head.appendChild(script);
         } else {
-            setCaptchaVerified(false);
-            setCaptchaError('Incorrect answer. Please try again.');
+            loadRecaptcha();
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        if (recaptchaReady && window.grecaptcha && window.grecaptcha.render && recaptchaRef.current && widgetId.current === null) {
+            try {
+                widgetId.current = window.grecaptcha.render(recaptchaRef.current, {
+                    sitekey: RECAPTCHA_SITE_KEY,
+                    theme: 'light'
+                });
+            } catch (err) {
+                console.error('reCAPTCHA render error:', err);
+            }
+        }
+    }, [recaptchaReady]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        if (!captchaVerified) {
-            verifyCaptcha();
-            if (!captchaVerified) {
-                setError('Please complete the captcha verification.');
-                return;
+        let captchaToken = '';
+        try {
+            if (window.grecaptcha && widgetId.current !== null) {
+                captchaToken = window.grecaptcha.getResponse(widgetId.current);
             }
+        } catch (err) {
+            console.error('Captcha error:', err);
+        }
+        
+        if (!captchaToken) {
+            setError('Please complete the captcha verification.');
+            return;
         }
         
         setError('');
         setLoading(true);
 
         try {
-            const response = await authService.forgotPassword(email);
+            const response = await authService.forgotPassword(email, captchaToken);
             if (response.success) {
                 setSuccess(true);
             } else {
@@ -139,41 +170,11 @@ const ForgotPassword = () => {
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700">Verify you're human</label>
-                        <div className="bg-gray-100 p-4 rounded-lg">
-                            <div className="flex items-center justify-between gap-4">
-                                <div className="text-lg font-semibold text-gray-800">
-                                    {num1} + {num2} = ?
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={refreshCaptcha}
-                                    className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
-                                    title="Refresh captcha"
-                                >
-                                    <RefreshCw className="w-5 h-5 text-gray-600" />
-                                </button>
-                            </div>
-                            <div className="mt-3 flex gap-2">
-                                <input
-                                    type="number"
-                                    value={captchaInput}
-                                    onChange={(e) => {
-                                        setCaptchaInput(e.target.value);
-                                        setCaptchaVerified(false);
-                                    }}
-                                    onBlur={verifyCaptcha}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                                    placeholder="Enter answer"
-                                    required
-                                />
-                                {captchaVerified && (
-                                    <div className="flex items-center text-green-600">
-                                        <CheckCircle className="w-5 h-5" />
-                                    </div>
-                                )}
-                            </div>
-                            {captchaError && (
-                                <p className="text-xs text-red-500 mt-1">{captchaError}</p>
+                        <div className="bg-gray-100 p-4 rounded-lg flex justify-center items-center min-h-[78px]">
+                            {recaptchaReady ? (
+                                <div ref={recaptchaRef}></div>
+                            ) : (
+                                <span className="text-gray-500">Loading captcha...</span>
                             )}
                         </div>
                     </div>

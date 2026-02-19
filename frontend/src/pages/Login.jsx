@@ -47,20 +47,6 @@ const Login = () => {
                     return;
                 }
 
-                const data = response.data;
-                // User data already stored by authService
-
-                // Track user login (optional/legacy)
-                const activeSessions = JSON.parse(localStorage.getItem('activeSessions')) || [];
-                const newSession = {
-                    id: Date.now(),
-                    email: data.user.email,
-                    loginTime: new Date().toISOString(),
-                    status: 'online'
-                };
-                activeSessions.push(newSession);
-                localStorage.setItem('activeSessions', JSON.stringify(activeSessions));
-
                 // Redirect based on role
                 if (data.user.role === 'admin') {
                     navigate('/admin/dashboard');

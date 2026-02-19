@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const UserModel = require('../models/userModel');
 const sendMail = require('../utils/mailer');
 const sessionManager = require('../services/sessionManager');
@@ -15,6 +16,11 @@ const {
 // ============================================================
 const MAX_FAILED_ATTEMPTS = 15;
 const LOCKOUT_DURATION_MINUTES = 10;
+
+// ============================================================
+// RECAPTCHA CONFIG
+// ============================================================
+const RECAPTCHA_SECRET_KEY = '6Ld9vHAsAAAAAFUfCudhT9SN3kzhBttCXLYu0QZA';
 
 // ============================================================
 // AUTH CONTROLLER
@@ -38,7 +44,7 @@ const authController = {
                 return res.status(409).json({ error: 'Email already registered' });
             }
 
-            const saltRounds = 12;
+            const saltRounds = 10;
             const passwordHash = await bcrypt.hash(password, saltRounds);
             const result = await UserModel.create(email, passwordHash, fullName, department);
 
@@ -258,10 +264,36 @@ const authController = {
     // FORGOT PASSWORD - Send PIN
     // ----------------------------------------------------------
     async forgotPassword(req, res) {
-        const { email } = req.body;
+        const { email, captchaToken } = req.body;
 
         if (!email) {
             return res.status(400).json({ error: 'Email is required' });
+        }
+
+        if (!captchaToken) {
+            return res.status(400).json({ error: 'Captcha verification required' });
+        }
+
+        try {
+            const axios = require('axios');
+            const verificationUrl = 'https://www.google.com/recaptcha/api/siteverify';
+            const verificationResponse = await axios.post(verificationUrl, 
+                null,
+                {
+                    params: {
+                        secret: RECAPTCHA_SECRET_KEY,
+                        response: captchaToken
+                    }
+                }
+            );
+
+            if (!verificationResponse.data.success) {
+                console.error('Recaptcha verification failed:', verificationResponse.data);
+                return res.status(400).json({ error: 'Captcha verification failed. Please try again.' });
+            }
+        } catch (error) {
+            console.error('Recaptcha verification error:', error.message);
+            return res.status(400).json({ error: 'Captcha verification failed. Please try again.' });
         }
 
         try {
@@ -326,7 +358,7 @@ const authController = {
                 return res.status(400).json({ error: 'PIN has expired. Please request a new one.' });
             }
 
-            const saltRounds = 12;
+            const saltRounds = 10;
             const passwordHash = await bcrypt.hash(newPassword, saltRounds);
             
             // Update password and clear reset token
@@ -370,7 +402,7 @@ const authController = {
                 return res.status(400).json({ error: 'Invalid or expired password reset token' });
             }
 
-            const saltRounds = 12;
+            const saltRounds = 10;
             const passwordHash = await bcrypt.hash(newPassword, saltRounds);
             await UserModel.updatePassword(users[0].id, passwordHash);
 
@@ -460,6 +492,35 @@ const authController = {
             console.error('Get current user error:', error);
             res.status(500).json({ error: 'Failed to fetch user data' });
         }
+    },
+
+    // ----------------------------------------------------------
+    // GENERATE PASSWORD SUGGESTION
+    // ----------------------------------------------------------
+    generatePassword(req, res) {
+        const length = Math.min(Math.max(parseInt(req.query.length) || 16, 8), 32);
+        
+        const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+        const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const numbers = '0123456789';
+        const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+        const allChars = lowercase + uppercase + numbers + symbols;
+
+        const getRandomChar = (chars) => chars[crypto.randomInt(chars.length)];
+
+        let password = '';
+        password += getRandomChar(lowercase);
+        password += getRandomChar(uppercase);
+        password += getRandomChar(numbers);
+        password += getRandomChar(symbols);
+
+        for (let i = password.length; i < length; i++) {
+            password += getRandomChar(allChars);
+        }
+
+        password = password.split('').sort(() => crypto.randomInt(2) - 0.5).join('');
+
+        res.json({ password, length });
     }
 };
 

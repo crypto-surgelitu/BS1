@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Users, DoorOpen, Bookmark } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Sidebar from '../components/layout/Sidebar';
 import BookingModal from '../components/modals/BookingModal';
@@ -10,6 +10,7 @@ import bookingService from '../services/bookingService';
 
 const Dashboard = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString('en-CA'));
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedRoom, setSelectedRoom] = useState(null);
@@ -22,22 +23,28 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    const fetchData = async () => {
+    useEffect(() => {
+        const viewParam = searchParams.get('view');
+        if (viewParam === 'booked' || viewParam === 'reserved') {
+            setCurrentView(viewParam);
+        }
+    }, [searchParams]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    const fetchData = useCallback(async () => {
         setLoading(true);
         setError('');
         try {
             const userStr = localStorage.getItem('user');
             const user = userStr ? JSON.parse(userStr) : null;
             
-            console.log('Dashboard fetchData - User:', user);
-            console.log('Dashboard fetchData - User ID:', user?.id);
-            
             const [roomsRes, bookingsRes] = await Promise.all([
                 roomService.getRooms(selectedDate),
                 user ? bookingService.getUserBookings(user.id) : Promise.resolve({ ok: false })
             ]);
-
-            console.log('Dashboard fetchData - Bookings response:', bookingsRes);
 
             if (!roomsRes.ok) throw new Error('Failed to fetch rooms');
             const roomsData = await roomsRes.json();
@@ -45,10 +52,7 @@ const Dashboard = () => {
 
             if (bookingsRes.ok) {
                 const bookingsData = await bookingsRes.json();
-                console.log('Dashboard fetchData - Bookings data:', bookingsData);
                 setUserBookings(bookingsData);
-            } else {
-                console.log('Dashboard fetchData - Bookings response not ok');
             }
         } catch (err) {
             console.error('Error fetching data:', err);
@@ -56,10 +60,6 @@ const Dashboard = () => {
         } finally {
             setLoading(false);
         }
-    };
-
-    useEffect(() => {
-        fetchData();
     }, [selectedDate]);
 
     const handleNavigate = (viewId) => {
@@ -85,12 +85,12 @@ const Dashboard = () => {
     };
 
     const handleBookingSuccess = (bookingType) => {
-        fetchData();
         if (bookingType === 'reservation') {
             setCurrentView('reserved');
         } else {
             setCurrentView('booked');
         }
+        fetchData();
     };
 
     const filteredRooms = rooms.filter(room => {
