@@ -17,6 +17,7 @@ const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('rooms'); // 'rooms', 'users', or 'bookings'
     const [loading, setLoading] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
 
     const fetchData = async () => {
         setLoading(true);
@@ -53,6 +54,7 @@ const AdminDashboard = () => {
             navigate('/login');
             return;
         }
+        setCurrentUser(user);
         fetchData();
 
         // Set up real-time socket connection for active users
@@ -385,14 +387,18 @@ const AdminDashboard = () => {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <button
-                                                    onClick={() => removeSession(session.id)}
-                                                    className="text-red-600 hover:text-red-900 flex items-center justify-end ml-auto"
-                                                    title="Disconnect User"
-                                                >
-                                                    <XCircle className="w-4 h-4 mr-1" />
-                                                    Disconnect
-                                                </button>
+                                                {session.id === currentUser?.id ? (
+                                                    <span className="text-gray-400 text-xs italic">Current session</span>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => removeSession(session.id)}
+                                                        className="text-red-600 hover:text-red-900 flex items-center justify-end ml-auto"
+                                                        title="Disconnect User"
+                                                    >
+                                                        <XCircle className="w-4 h-4 mr-1" />
+                                                        Disconnect
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     ))
