@@ -1,11 +1,12 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
-const generateAccessToken = (user) => {
+const generateAccessToken = (user, isAdmin = false) => {
+    const expiresIn = isAdmin ? '2h' : (process.env.JWT_EXPIRES_IN || '24h');
     return jwt.sign(
         { userId: user.id, email: user.email, role: user.role },
         process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRES_IN || '24h', issuer: 'swahilipot-hub', audience: 'swahilipot-users' }
+        { expiresIn, issuer: 'swahilipot-hub', audience: 'swahilipot-users' }
     );
 };
 

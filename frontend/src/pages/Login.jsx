@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Building2, User, Eye, EyeOff } from 'lucide-react';
 import authService from '../services/authService';
+import spfLogo from '../assets/sph-logo (1).png';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -75,11 +76,13 @@ const Login = () => {
         <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
                 <div className="flex flex-col items-center mb-8">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                        <User className="text-blue-600 w-8 h-8" />
-                    </div>
+                    <img 
+                        src={spfLogo} 
+                        alt="SPF Logo" 
+                        className="w-32 h-32 mb-4 object-contain"
+                    />
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                        Welcome Back <User className="w-5 h-5 text-blue-500" />
+                        Welcome Back
                     </h1>
                     <p className="text-gray-500 mt-2">Sign in to your account to book rooms</p>
                 </div>

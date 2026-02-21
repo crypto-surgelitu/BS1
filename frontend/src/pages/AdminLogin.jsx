@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Mail, Lock, User } from 'lucide-react';
 import authService from '../services/authService';
+import spfLogo from '../assets/sph-logo (1).png';
+
+const RECAPTCHA_SITE_KEY = '6Ld9vHAsAAAAALZLg1TvrkYJCA9WiPkNU2Ml_s83';
 
 const AdminLogin = () => {
     const navigate = useNavigate();
@@ -12,6 +15,53 @@ const AdminLogin = () => {
 
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [recaptchaReady, setRecaptchaReady] = useState(false);
+    const recaptchaRef = useRef(null);
+    const widgetId = useRef(null);
+
+    useEffect(() => {
+        const loadRecaptcha = () => {
+            if (window.grecaptcha && window.grecaptcha.render) {
+                setRecaptchaReady(true);
+            } else {
+                const checkRecaptcha = setInterval(() => {
+                    if (window.grecaptcha && window.grecaptcha.render) {
+                        clearInterval(checkRecaptcha);
+                        setRecaptchaReady(true);
+                    }
+                }, 100);
+                setTimeout(() => clearInterval(checkRecaptcha), 5000);
+            }
+        };
+
+        if (!window.grecaptcha) {
+            const script = document.createElement('script');
+            script.src = 'https://www.google.com/recaptcha/api.js?render=explicit';
+            script.async = true;
+            script.defer = true;
+            script.onload = loadRecaptcha;
+            script.onerror = () => {
+                console.error('Failed to load reCAPTCHA script');
+                setError('Failed to load captcha. Please refresh and try again.');
+            };
+            document.head.appendChild(script);
+        } else {
+            loadRecaptcha();
+        }
+    }, []);
+
+    useEffect(() => {
+        if (recaptchaReady && window.grecaptcha && window.grecaptcha.render && recaptchaRef.current && widgetId.current === null) {
+            try {
+                widgetId.current = window.grecaptcha.render(recaptchaRef.current, {
+                    sitekey: RECAPTCHA_SITE_KEY,
+                    theme: 'light'
+                });
+            } catch (err) {
+                console.error('reCAPTCHA render error:', err);
+            }
+        }
+    }, [recaptchaReady]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -21,11 +71,26 @@ const AdminLogin = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        let captchaToken = '';
+        try {
+            if (window.grecaptcha && widgetId.current !== null) {
+                captchaToken = window.grecaptcha.getResponse(widgetId.current);
+            }
+        } catch (err) {
+            console.error('Captcha error:', err);
+        }
+        
+        if (!captchaToken) {
+            setError('Please complete the captcha verification.');
+            return;
+        }
+
         setLoading(true);
         setError('');
 
         try {
-            const response = await authService.login(formData.email, formData.password);
+            const response = await authService.adminLogin(formData.email, formData.password, captchaToken);
 
             if (response.success) {
                 const data = response.data;
@@ -59,11 +124,13 @@ const AdminLogin = () => {
         <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
                 <div className="flex flex-col items-center mb-8">
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                        <User className="text-red-600 w-8 h-8" />
-                    </div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                        Admin Portal <Shield className="w-5 h-5 text-red-500" />
+                    <img 
+                        src={spfLogo} 
+                        alt="SPF Logo" 
+                        className="w-32 h-32 mb-4 object-contain"
+                    />
+                    <h1 className="text-2xl font-bold text-gray-900">
+                        Admin Portal
                     </h1>
                     <p className="text-gray-500 mt-2">Sign in to manage rooms and users</p>
                 </div>
@@ -108,6 +175,17 @@ const AdminLogin = () => {
                                 placeholder="••••••••"
                                 required
                             />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Verify you're human</label>
+                        <div className="bg-gray-100 p-4 rounded-lg flex justify-center items-center min-h-[78px]">
+                            {recaptchaReady ? (
+                                <div ref={recaptchaRef}></div>
+                            ) : (
+                                <span className="text-gray-500">Loading captcha...</span>
+                            )}
                         </div>
                     </div>
 

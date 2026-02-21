@@ -188,6 +188,111 @@ const authController = {
     },
 
     // ----------------------------------------------------------
+    // ADMIN LOGIN (with stricter security)
+    // ----------------------------------------------------------
+    async adminLogin(req, res) {
+        const { email, password } = req.body;
+
+        try {
+            const results = await UserModel.findByEmail(email);
+
+            if (results.length === 0) {
+                console.warn(`⚠️ Admin login attempt with invalid email: ${email}`);
+                return res.status(401).json({ error: 'Invalid admin credentials' });
+            }
+
+            const user = results[0];
+
+            // Check if user has admin role
+            if (user.role !== 'admin' && user.role !== 'super_admin') {
+                console.warn(`⚠️ Non-admin user attempted admin login: ${email}`);
+                return res.status(403).json({ error: 'Access denied. This portal is for administrators only.' });
+            }
+
+            // Check if account is locked
+            const lockInfo = await UserModel.isAccountLocked(user.id);
+            if (lockInfo) {
+                const unlockTime = new Date(lockInfo.locked_until);
+                const minutesLeft = Math.ceil((unlockTime - Date.now()) / 60000);
+                return res.status(423).json({
+                    error: `Account temporarily locked. Try again in ${minutesLeft > 0 ? minutesLeft : 1} minute(s).`,
+                    code: 'ACCOUNT_LOCKED',
+                    lockedUntil: unlockTime.toISOString()
+                });
+            }
+
+            const match = await bcrypt.compare(password, user.password_hash);
+
+            if (!match) {
+                await UserModel.incrementFailedAttempts(user.id);
+
+                const newAttempts = (user.failed_login_attempts || 0) + 1;
+                if (newAttempts >= MAX_FAILED_ATTEMPTS) {
+                    const lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000);
+                    await UserModel.lockAccount(user.id, lockedUntil);
+                    console.warn(`🔒 Admin account locked: ${email} after ${newAttempts} failed attempts`);
+                    return res.status(423).json({
+                        error: `Too many failed attempts. Account locked for ${LOCKOUT_DURATION_MINUTES} minutes.`,
+                        code: 'ACCOUNT_LOCKED'
+                    });
+                }
+
+                console.warn(`⚠️ Failed admin login attempt: ${email} (${newAttempts}/${MAX_FAILED_ATTEMPTS})`);
+                const remaining = MAX_FAILED_ATTEMPTS - newAttempts;
+                return res.status(401).json({
+                    error: `Invalid admin credentials. ${remaining} attempt(s) remaining.`
+                });
+            }
+
+            // Successful login - reset failed attempts
+            await UserModel.resetFailedAttempts(user.id);
+
+            // 2FA CHECK - Strongly recommended for admins
+            if (user.totp_enabled) {
+                const tempToken = generateTempToken(user);
+                console.log(`🔐 Admin 2FA required for: ${user.email}`);
+                return res.json({
+                    require2fa: true,
+                    tempToken: tempToken,
+                    userId: user.id
+                });
+            }
+
+            // Generate tokens with shorter expiry for admin (2 hours instead of 24)
+            const accessToken = generateAccessToken(user, true);
+            const refreshToken = generateRefreshToken(user);
+
+            sessionManager.addSession(user.id, {
+                userId: user.id,
+                email: user.email,
+                fullName: user.full_name,
+                role: user.role
+            });
+
+            console.log(`✅ Admin logged in: ${user.email} (${user.role})`);
+
+            res.json({
+                message: 'Admin login successful',
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    fullName: user.full_name,
+                    department: user.department,
+                    role: user.role,
+                    emailVerified: !!user.email_verified,
+                    totpEnabled: !!user.totp_enabled
+                },
+                accessToken,
+                refreshToken
+            });
+
+        } catch (error) {
+            console.error('Admin login error:', error);
+            res.status(500).json({ error: 'Admin login failed' });
+        }
+    },
+
+    // ----------------------------------------------------------
     // EMAIL VERIFICATION
     // ----------------------------------------------------------
     async verifyEmail(req, res) {

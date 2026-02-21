@@ -1,5 +1,6 @@
 import React from 'react';
 import { Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
+import spfLogo from '../../assets/sph-logo (1).png';
 
 const Footer = () => {
     return (
@@ -8,7 +9,11 @@ const Footer = () => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     {/* Brand Section */}
                     <div className="space-y-4">
-                        <h2 className="text-2xl font-bold tracking-tight">SWAHILIPOT</h2>
+                        <img 
+                            src={spfLogo} 
+                            alt="SPF Logo" 
+                            className="w-24 h-24 object-contain"
+                        />
                         <p className="text-sm text-gray-300 leading-relaxed">
                             Empowering youth through technology, arts, and entrepreneurship across East Africa.
                         </p>

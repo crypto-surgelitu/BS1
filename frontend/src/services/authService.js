@@ -34,6 +34,36 @@ const authService = {
     },
 
     /**
+     * Admin login with reCAPTCHA
+     */
+    async adminLogin(email, password, captchaToken) {
+        const response = await apiFetch('/admin/login', {
+            method: 'POST',
+            body: { email, password, captchaToken },
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+
+            if (data.require2fa) {
+                return {
+                    success: true,
+                    require2fa: true,
+                    tempToken: data.tempToken,
+                    userId: data.userId
+                };
+            }
+
+            saveTokens(data.accessToken, data.refreshToken);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            return { success: true, data };
+        }
+
+        const error = await response.json();
+        return { success: false, error: error.error, status: response.status };
+    },
+
+    /**
      * Signup new user and store tokens
      */
     async signup(email, password, fullName, department) {

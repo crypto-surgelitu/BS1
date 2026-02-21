@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { LogOut, Building2, Menu } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
+import spfLogo from '../assets/sph-logo (1).png';
 
 const Navbar = ({ onMenuClick }) => {
     const navigate = useNavigate();
@@ -43,13 +44,15 @@ const Navbar = ({ onMenuClick }) => {
                             <Menu className="w-6 h-6" />
                         </button>
 
-                        <Link to="/dashboard" className="flex items-center hover:opacity-80 transition-opacity">
-                            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
-                                <Building2 className="text-white w-6 h-6" />
-                            </div>
+                        <Link to="/dashboard" className="flex items-center hover:opacity-90 transition-opacity">
+                            <img 
+                                src={spfLogo} 
+                                alt="SPF Logo" 
+                                className="w-14 h-14 mr-3 object-contain"
+                            />
                             <div>
-                                <h1 className="text-lg font-bold text-gray-900 leading-none"> Swahilipot Hub BS1 </h1>
-                                <p className="text-sm text-gray-500">Booking System</p>
+                                <h1 className="text-xl font-extrabold text-gray-900 leading-none tracking-tight"> Swahilipot Hub BS1 </h1>
+                                <p className="text-sm text-gray-500 font-medium">Booking System</p>
                             </div>
                         </Link>
                     </div>

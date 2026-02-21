@@ -20,6 +20,26 @@ const authLimiter = rateLimit({
     }
 });
 
+const adminAuthLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: {
+        error: 'Too many admin login attempts. Please try again after 15 minutes.',
+        code: 'ADMIN_RATE_LIMIT_EXCEEDED'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: true,
+    handler: (req, res) => {
+        console.warn(`⚠️  Admin rate limit exceeded for IP: ${req.ip}`);
+        res.status(429).json({
+            error: 'Too many admin login attempts. Please try again after 15 minutes.',
+            code: 'ADMIN_RATE_LIMIT_EXCEEDED',
+            retryAfter: Math.ceil(req.rateLimit.resetTime.getTime() / 1000)
+        });
+    }
+});
+
 const apiLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 200,
@@ -40,12 +60,12 @@ const apiLimiter = rateLimit({
     }
 });
 
-const adminLimiter = rateLimit({
+const adminApiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: 30,
     message: {
-        error: 'Too many admin requests. Please try again later.',
-        code: 'RATE_LIMIT_EXCEEDED'
+        error: 'Too many admin API requests. Please try again later.',
+        code: 'ADMIN_API_LIMIT_EXCEEDED'
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -66,7 +86,8 @@ const bookingLimiter = rateLimit({
 
 module.exports = {
     authLimiter,
+    adminAuthLimiter,
     apiLimiter,
-    adminLimiter,
+    adminApiLimiter,
     bookingLimiter
 };

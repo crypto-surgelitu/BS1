@@ -4,7 +4,8 @@ const authController = require('../controllers/authController');
 const twoFactorController = require('../controllers/twoFactorController');
 const sessionManager = require('../services/sessionManager');
 const { authenticate } = require('../middleware/auth');
-const { authLimiter } = require('../middleware/rateLimiter');
+const { authLimiter, adminAuthLimiter } = require('../middleware/rateLimiter');
+const verifyRecaptcha = require('../middleware/verifyRecaptcha');
 const {
     signupValidation: validateSignup,
     loginValidation: validateLogin,
@@ -31,6 +32,13 @@ router.post('/login',
     validateLogin,
     handleValidationErrors,
     authController.login
+);
+
+// POST /admin/login - Admin login with reCAPTCHA
+router.post('/admin/login',
+    adminAuthLimiter,
+    verifyRecaptcha,
+    authController.adminLogin
 );
 
 // POST /refresh-token - Refresh access token
