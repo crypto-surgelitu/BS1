@@ -90,7 +90,7 @@ const authController = {
     },
 
     // ----------------------------------------------------------
-    // LOGIN (with Account Lockout & 2FA Enforcement)
+    // LOGIN (with Account Lockout & 2FA Enforcement & Password Reset OTP)
     // ----------------------------------------------------------
     async login(req, res) {
         const { email, password } = req.body;
@@ -142,6 +142,19 @@ const authController = {
             // Successful login - reset failed attempts
             await UserModel.resetFailedAttempts(user.id);
 
+            // Check if user needs to verify with OTP after password reset (within 24 hours)
+            const hasRecentReset = await UserModel.hasRecentPasswordReset(user.id);
+            if (hasRecentReset && user.login_otp) {
+                const tempToken = generateTempToken(user);
+                console.log(`🔐 Password reset OTP required for user: ${user.email}`);
+                return res.json({
+                    requirePasswordResetOtp: true,
+                    tempToken: tempToken,
+                    userId: user.id,
+                    message: 'Please verify your identity with the OTP sent to your email.'
+                });
+            }
+
             // 2FA CHECK
             if (user.totp_enabled) {
                 const tempToken = generateTempToken(user);
@@ -165,6 +178,12 @@ const authController = {
             });
 
             console.log(`✅ User logged in: ${user.email}`);
+            
+            // Clear the login OTP and password_reset_at after successful login
+            if (hasRecentReset) {
+                await UserModel.clearLoginOtp(user.id);
+                await UserModel.clearPasswordResetTimestamp(user.id);
+            }
 
             res.json({
                 message: 'Login successful',
@@ -247,6 +266,19 @@ const authController = {
             // Successful login - reset failed attempts
             await UserModel.resetFailedAttempts(user.id);
 
+            // Check if user needs to verify with OTP after password reset (within 24 hours)
+            const hasRecentReset = await UserModel.hasRecentPasswordReset(user.id);
+            if (hasRecentReset && user.login_otp) {
+                const tempToken = generateTempToken(user);
+                console.log(`🔐 Password reset OTP required for admin: ${user.email}`);
+                return res.json({
+                    requirePasswordResetOtp: true,
+                    tempToken: tempToken,
+                    userId: user.id,
+                    message: 'Please verify your identity with the OTP sent to your email.'
+                });
+            }
+
             // 2FA CHECK - Strongly recommended for admins
             if (user.totp_enabled) {
                 const tempToken = generateTempToken(user);
@@ -270,6 +302,12 @@ const authController = {
             });
 
             console.log(`✅ Admin logged in: ${user.email} (${user.role})`);
+            
+            // Clear the login OTP and password_reset_at after successful login
+            if (hasRecentReset) {
+                await UserModel.clearLoginOtp(user.id);
+                await UserModel.clearPasswordResetTimestamp(user.id);
+            }
 
             res.json({
                 message: 'Admin login successful',
@@ -440,7 +478,7 @@ const authController = {
     },
 
     // ----------------------------------------------------------
-    // RESET PASSWORD WITH PIN
+    // RESET PASSWORD WITH PIN + SEND OTP FOR NEXT LOGIN
     // ----------------------------------------------------------
     async resetPasswordWithPin(req, res) {
         const { pin, newPassword } = req.body;
@@ -466,11 +504,30 @@ const authController = {
             const saltRounds = 10;
             const passwordHash = await bcrypt.hash(newPassword, saltRounds);
             
-            // Update password and clear reset token
-            await UserModel.updatePassword(user.id, passwordHash);
-            await UserModel.clearPasswordResetToken(user.id);
+            // Update password, set password_reset_at timestamp, and clear reset token
+            await UserModel.updatePasswordAndResetTimestamp(user.id, passwordHash);
 
-            console.log(`✅ Password reset with PIN for: ${user.email}`);
+            // Generate OTP for next login verification
+            const loginOtp = crypto.randomInt(100000, 999999).toString();
+            const loginOtpExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+            await UserModel.setLoginOtp(user.id, loginOtp, loginOtpExpires);
+
+            // Send OTP to user's email
+            sendMail(
+                user.email,
+                'Login Verification OTP - SwahiliPot Hub',
+                `Your login verification OTP is: ${loginOtp}\n\nThis OTP is required to verify your identity the next time you log in after your password reset.\n\nThis OTP expires in 24 hours.`,
+                `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+                    <h2 style="color:#0B4F6C;">Login Verification OTP</h2>
+                    <p>Hello <strong>${user.full_name}</strong>,</p>
+                    <p>You have reset your password. Use the OTP below to verify your identity on your next login:</p>
+                    <div style="font-size:32px;font-weight:bold;letter-spacing:8px;padding:20px;background:#f3f4f6;border-radius:8px;margin:20px 0;text-align:center;color:#0B4F6C;">${loginOtp}</div>
+                    <p style="color:#666;font-size:14px;">This OTP expires in <strong>24 hours</strong>.</p>
+                    <p style="color:#666;font-size:12px;">If you didn't reset your password, please contact support immediately.</p>
+                </div>`
+            ).catch(err => console.error('Failed to send login OTP email:', err.message));
+
+            console.log(`✅ Password reset with PIN for: ${user.email} - OTP sent for next login`);
 
             sendMail(
                 user.email,
@@ -483,7 +540,7 @@ const authController = {
                 </div>`
             ).catch(err => console.error('Failed to send password changed email:', err.message));
 
-            res.json({ message: 'Password reset successfully. You can now log in with your new password.' });
+            res.json({ message: 'Password reset successfully. An OTP has been sent to your email for verification on your next login.' });
 
         } catch (error) {
             console.error('Reset password with PIN error:', error);
@@ -529,6 +586,141 @@ const authController = {
         } catch (error) {
             console.error('Reset password error:', error);
             res.status(500).json({ error: 'Password reset failed' });
+        }
+    },
+
+    // ----------------------------------------------------------
+    // VERIFY PASSWORD RESET OTP
+    // ----------------------------------------------------------
+    async verifyPasswordResetOtp(req, res) {
+        const { otp, tempToken } = req.body;
+
+        if (!otp || !tempToken) {
+            return res.status(400).json({ error: 'OTP and temp token are required' });
+        }
+
+        try {
+            const decoded = jwt.verify(
+                tempToken,
+                process.env.JWT_TEMP_SECRET || process.env.JWT_SECRET
+            );
+
+            const users = await UserModel.findByLoginOtp(otp);
+            
+            if (users.length === 0) {
+                return res.status(400).json({ error: 'Invalid or expired OTP' });
+            }
+
+            const user = users[0];
+
+            // Verify it's the same user
+            if (user.id !== decoded.userId) {
+                return res.status(401).json({ error: 'Invalid OTP for this user' });
+            }
+
+            // Clear OTP after successful verification
+            await UserModel.clearLoginOtp(user.id);
+            await UserModel.clearPasswordResetTimestamp(user.id);
+
+            // Generate tokens
+            const accessToken = generateAccessToken(user);
+            const refreshToken = generateRefreshToken(user);
+
+            sessionManager.addSession(user.id, {
+                userId: user.id,
+                email: user.email,
+                fullName: user.full_name,
+                role: user.role
+            });
+
+            console.log(`✅ User verified with password reset OTP: ${user.email}`);
+
+            res.json({
+                message: 'Identity verified successfully',
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    fullName: user.full_name,
+                    department: user.department,
+                    role: user.role,
+                    emailVerified: !!user.email_verified,
+                    totpEnabled: !!user.totp_enabled
+                },
+                accessToken,
+                refreshToken
+            });
+
+        } catch (error) {
+            if (error.name === 'JsonWebTokenError') {
+                return res.status(401).json({ error: 'Invalid or expired session' });
+            }
+            if (error.name === 'TokenExpiredError') {
+                return res.status(401).json({ error: 'Session expired. Please login again.' });
+            }
+            console.error('Password reset OTP verification error:', error);
+            res.status(500).json({ error: 'OTP verification failed' });
+        }
+    },
+
+    // ----------------------------------------------------------
+    // RESEND PASSWORD RESET OTP
+    // ----------------------------------------------------------
+    async resendPasswordResetOtp(req, res) {
+        const { tempToken } = req.body;
+
+        if (!tempToken) {
+            return res.status(400).json({ error: 'Session token is required' });
+        }
+
+        try {
+            const decoded = jwt.verify(
+                tempToken,
+                process.env.JWT_TEMP_SECRET || process.env.JWT_SECRET
+            );
+
+            const users = await UserModel.findById(decoded.userId);
+            
+            if (users.length === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+
+            const user = users[0];
+
+            // Check if OTP still exists and is valid
+            if (!user.login_otp || !user.login_otp_expires) {
+                return res.status(400).json({ error: 'No pending OTP. Please login again.' });
+            }
+
+            if (new Date(user.login_otp_expires) < new Date()) {
+                await UserModel.clearLoginOtp(user.id);
+                await UserModel.clearPasswordResetTimestamp(user.id);
+                return res.status(400).json({ error: 'OTP has expired. Please login again.' });
+            }
+
+            // Resend the existing OTP
+            sendMail(
+                user.email,
+                'Login Verification OTP - SwahiliPot Hub',
+                `Your login verification OTP is: ${user.login_otp}\n\nThis OTP is required to verify your identity.\n\nThis OTP expires in 24 hours.`,
+                `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+                    <h2 style="color:#0B4F6C;">Login Verification OTP</h2>
+                    <p>Hello <strong>${user.full_name}</strong>,</p>
+                    <p>Use the OTP below to verify your identity:</p>
+                    <div style="font-size:32px;font-weight:bold;letter-spacing:8px;padding:20px;background:#f3f4f6;border-radius:8px;margin:20px 0;text-align:center;color:#0B4F6C;">${user.login_otp}</div>
+                    <p style="color:#666;font-size:14px;">This OTP expires in <strong>24 hours</strong>.</p>
+                </div>`
+            ).catch(err => console.error('Failed to resend login OTP email:', err.message));
+
+            console.log(`📧 Password reset OTP resent to: ${user.email}`);
+
+            res.json({ message: 'OTP has been resent to your email.' });
+
+        } catch (error) {
+            if (error.name === 'JsonWebTokenError') {
+                return res.status(401).json({ error: 'Invalid or expired session' });
+            }
+            console.error('Resend password reset OTP error:', error);
+            res.status(500).json({ error: 'Failed to resend OTP' });
         }
     },
 

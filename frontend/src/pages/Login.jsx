@@ -14,8 +14,11 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [show2fa, setShow2fa] = useState(false);
+    const [showPasswordResetOtp, setShowPasswordResetOtp] = useState(false);
     const [twoFactorCode, setTwoFactorCode] = useState('');
+    const [passwordResetOtp, setPasswordResetOtp] = useState('');
     const [tempToken, setTempToken] = useState('');
+    const [otpMessage, setOtpMessage] = useState('');
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -32,15 +35,14 @@ const Login = () => {
             let response;
 
             if (show2fa) {
-                // Verify 2FA
                 response = await authService.verify2fa(twoFactorCode, tempToken);
+            } else if (showPasswordResetOtp) {
+                response = await authService.verifyPasswordResetOtp(passwordResetOtp, tempToken);
             } else {
-                // Determine 2FA status
                 response = await authService.login(formData.email, formData.password);
             }
 
             if (response.success) {
-                // Handle 2FA Requirement
                 if (response.require2fa) {
                     setTempToken(response.tempToken);
                     setShow2fa(true);
@@ -48,7 +50,21 @@ const Login = () => {
                     return;
                 }
 
-                // Redirect based on role
+                if (response.requirePasswordResetOtp) {
+                    setTempToken(response.tempToken);
+                    setShowPasswordResetOtp(true);
+                    setOtpMessage(response.message || 'Please verify your identity with the OTP sent to your email.');
+                    setLoading(false);
+                    return;
+                }
+
+                // Check if user data exists
+                if (!response.data || !response.data.user) {
+                    setError('Login failed: Invalid server response');
+                    setLoading(false);
+                    return;
+                }
+
                 if (response.data.user.role === 'super_admin') {
                     navigate('/super-admin/dashboard');
                 } else if (response.data.user.role === 'admin') {
@@ -57,7 +73,6 @@ const Login = () => {
                     navigate('/dashboard');
                 }
             } else {
-                // Special handling for database connection errors (503)
                 if (response.status === 503) {
                     setError('Database connection error. Please ensure MySQL is running (check XAMPP or MySQL service).');
                 } else {
@@ -69,6 +84,21 @@ const Login = () => {
             setError('System connection failed. Please ensure the backend server is running.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleResendOtp = async () => {
+        if (!tempToken) return;
+        
+        try {
+            const response = await authService.resendPasswordResetOtp(tempToken);
+            if (response.success) {
+                alert('OTP has been resent to your email.');
+            } else {
+                setError(response.error || 'Failed to resend OTP.');
+            }
+        } catch {
+            setError('Connection failed. Please try again.');
         }
     };
 
@@ -94,7 +124,70 @@ const Login = () => {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {show2fa ? (
+                    {showPasswordResetOtp ? (
+                        <div className="space-y-4">
+                            <div className="text-center mb-4">
+                                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <Lock className="text-blue-600 w-6 h-6" />
+                                </div>
+                                <h2 className="text-lg font-semibold text-gray-900">Verify Your Identity</h2>
+                                <p className="text-sm text-gray-500 mt-1">{otpMessage}</p>
+                            </div>
+                            
+                            {error && (
+                                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                                    <p className="text-sm text-red-600">{error}</p>
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">Enter 6-Digit OTP</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Lock className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={passwordResetOtp}
+                                        onChange={(e) => {
+                                            const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                                            setPasswordResetOtp(value);
+                                            setError('');
+                                        }}
+                                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50 text-gray-900 placeholder-gray-400 text-center text-2xl tracking-widest font-mono"
+                                        placeholder="000000"
+                                        maxLength={6}
+                                        required
+                                        autoFocus
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-500 text-center mt-2">
+                                    Check your email for the OTP sent after password reset.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={handleResendOtp}
+                                className="w-full text-sm text-blue-600 hover:text-blue-500 font-medium"
+                            >
+                                Resend OTP
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowPasswordResetOtp(false);
+                                    setPasswordResetOtp('');
+                                    setTempToken('');
+                                    setError('');
+                                }}
+                                className="w-full text-sm text-gray-500 hover:text-gray-700"
+                            >
+                                Back to Login
+                            </button>
+                        </div>
+                    ) : show2fa ? (
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-700">Enter 2FA Code</label>
                             <div className="relative">
@@ -173,7 +266,7 @@ const Login = () => {
                         disabled={loading}
                         className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {loading ? (show2fa ? 'Verifying...' : 'Signing in...') : (show2fa ? 'Verify 2FA' : 'Sign In')}
+                        {loading ? (show2fa || showPasswordResetOtp ? 'Verifying...' : 'Signing in...') : (show2fa ? 'Verify 2FA' : showPasswordResetOtp ? 'Verify & Login' : 'Sign In')}
                     </button>
                 </form>
 

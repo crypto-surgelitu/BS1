@@ -9,7 +9,7 @@
 
 ## Overview
 
-Automatically locks user accounts after 5 consecutive failed login attempts for 30 minutes. This prevents brute-force password attacks while minimizing disruption to legitimate users.
+Automatically locks user accounts after 15 consecutive failed login attempts for 10 minutes. This prevents brute-force password attacks while minimizing disruption to legitimate users.
 
 ## How It Works
 
@@ -34,8 +34,8 @@ ALTER TABLE users
 
 | Parameter | Value | Rationale |
 |-----------|-------|-----------|
-| Max attempts | 5 | Industry standard (NIST SP 800-63B) |
-| Lockout duration | 30 minutes | Balances security vs. user inconvenience |
+| Max attempts | 15 | High threshold to reduce false positives |
+| Lockout duration | 10 minutes | Balances security vs. user inconvenience |
 | Reset on success | Yes | Prevents legitimate users from being locked out |
 | Reset on password change | Yes | Allows recovery via password reset |
 

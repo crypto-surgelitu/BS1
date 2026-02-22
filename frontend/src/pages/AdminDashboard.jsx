@@ -170,6 +170,7 @@ const AdminDashboard = () => {
                 alert(data.error || 'Failed to update room');
             }
         } catch (err) {
+            console.error('Update room error:', err);
             alert('Error connecting to server');
         }
     };

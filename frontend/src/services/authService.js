@@ -10,9 +10,9 @@ const authService = {
             body: { email, password },
         });
 
-        if (response.ok) {
-            const data = await response.json();
+        const data = await response.json();
 
+        if (response.ok) {
             // Check if 2FA is required
             if (data.require2fa) {
                 return {
@@ -23,14 +23,29 @@ const authService = {
                 };
             }
 
+            // Check if password reset OTP is required
+            if (data.requirePasswordResetOtp) {
+                return {
+                    success: true,
+                    requirePasswordResetOtp: true,
+                    tempToken: data.tempToken,
+                    userId: data.userId,
+                    message: data.message
+                };
+            }
+
+            // Check if user data exists
+            if (!data.user) {
+                return { success: false, error: 'Invalid server response: no user data', status: response.status };
+            }
+
             // Store tokens and user data
             saveTokens(data.accessToken, data.refreshToken);
             localStorage.setItem('user', JSON.stringify(data.user));
             return { success: true, data };
         }
 
-        const error = await response.json();
-        return { success: false, error: error.error, status: response.status };
+        return { success: false, error: data.error, status: response.status };
     },
 
     /**
@@ -176,6 +191,43 @@ const authService = {
         const response = await apiFetch('/reset-password-pin', {
             method: 'POST',
             body: { pin, newPassword },
+        });
+
+        if (response.ok) {
+            return { success: true };
+        }
+
+        const error = await response.json();
+        return { success: false, error: error.error };
+    },
+
+    /**
+     * Verify password reset OTP after login
+     */
+    async verifyPasswordResetOtp(otp, tempToken) {
+        const response = await apiFetch('/verify-password-reset-otp', {
+            method: 'POST',
+            body: { otp, tempToken },
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            saveTokens(data.accessToken, data.refreshToken);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            return { success: true, data };
+        }
+
+        const error = await response.json();
+        return { success: false, error: error.error };
+    },
+
+    /**
+     * Resend password reset OTP
+     */
+    async resendPasswordResetOtp(tempToken) {
+        const response = await apiFetch('/resend-password-reset-otp', {
+            method: 'POST',
+            body: { tempToken },
         });
 
         if (response.ok) {

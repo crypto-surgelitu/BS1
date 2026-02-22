@@ -183,6 +183,27 @@ router.post('/reset-password',
     authController.resetPassword
 );
 
+// POST /verify-password-reset-otp - Verify OTP after password reset
+router.post('/verify-password-reset-otp',
+    authLimiter,
+    [
+        body('otp').isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 digits'),
+        body('tempToken').notEmpty().withMessage('Temp token is required')
+    ],
+    handleValidationErrors,
+    authController.verifyPasswordResetOtp
+);
+
+// POST /resend-password-reset-otp - Resend OTP after password reset
+router.post('/resend-password-reset-otp',
+    authLimiter,
+    [
+        body('tempToken').notEmpty().withMessage('Temp token is required')
+    ],
+    handleValidationErrors,
+    authController.resendPasswordResetOtp
+);
+
 // GET /generate-password - Generate a strong password suggestion
 router.get('/generate-password', authController.generatePassword);
 

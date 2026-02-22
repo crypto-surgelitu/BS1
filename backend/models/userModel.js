@@ -87,6 +87,54 @@ const UserModel = {
         return result;
     },
 
+    async updatePasswordAndResetTimestamp(userId, passwordHash) {
+        const [result] = await dbPromise.query(
+            'UPDATE users SET password_hash = ?, password_reset_token = NULL, password_reset_expires = NULL, password_reset_at = NOW(), failed_login_attempts = 0, locked_until = NULL WHERE id = ?',
+            [passwordHash, userId]
+        );
+        return result;
+    },
+
+    async setLoginOtp(userId, otp, expiresAt) {
+        const [result] = await dbPromise.query(
+            'UPDATE users SET login_otp = ?, login_otp_expires = ? WHERE id = ?',
+            [otp, expiresAt, userId]
+        );
+        return result;
+    },
+
+    async findByLoginOtp(otp) {
+        const [rows] = await dbPromise.query(
+            'SELECT * FROM users WHERE login_otp = ? AND login_otp_expires > NOW()',
+            [otp]
+        );
+        return rows;
+    },
+
+    async clearLoginOtp(userId) {
+        const [result] = await dbPromise.query(
+            'UPDATE users SET login_otp = NULL, login_otp_expires = NULL WHERE id = ?',
+            [userId]
+        );
+        return result;
+    },
+
+    async clearPasswordResetTimestamp(userId) {
+        const [result] = await dbPromise.query(
+            'UPDATE users SET password_reset_at = NULL WHERE id = ?',
+            [userId]
+        );
+        return result;
+    },
+
+    async hasRecentPasswordReset(userId) {
+        const [rows] = await dbPromise.query(
+            'SELECT password_reset_at FROM users WHERE id = ? AND password_reset_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)',
+            [userId]
+        );
+        return rows.length > 0;
+    },
+
     async clearPasswordResetToken(userId) {
         const [result] = await dbPromise.query(
             'UPDATE users SET password_reset_token = NULL, password_reset_expires = NULL WHERE id = ?',
