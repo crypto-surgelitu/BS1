@@ -66,9 +66,9 @@ router.get('/active-users', authenticate, async (req, res) => {
         
         let activeUsers = sessionManager.getActiveSessions();
         
-        // If admin (not super_admin), filter out super admins and other admins from the list
+        // If admin (not super_admin), filter out super admins from the list but keep themselves
         if (userRole === 'admin') {
-            activeUsers = activeUsers.filter(user => user.role === 'user');
+            activeUsers = activeUsers.filter(user => user.role === 'user' || user.userId === req.user.id);
         }
         
         res.json({ activeUsers });

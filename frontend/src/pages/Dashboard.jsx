@@ -181,13 +181,13 @@ const Dashboard = () => {
     };
 
     const filteredRooms = rooms.filter(room => {
-        const matchesSearch = room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            room.amenities?.some(amenity => amenity.toLowerCase().includes(searchTerm.toLowerCase()));
+        const matchesSearch = (room.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            room.amenities?.some(amenity => amenity?.toLowerCase()?.includes(searchTerm.toLowerCase()));
         return currentView === 'available' ? matchesSearch : false;
     });
 
     const filteredBookings = userBookings.filter(booking => {
-        const matchesSearch = booking.room_name?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = (booking.room_name?.toLowerCase() || '').includes(searchTerm.toLowerCase());
         if (currentView === 'reserved') return matchesSearch && booking.type === 'reservation';
         if (currentView === 'booked') return matchesSearch && booking.type === 'booking';
         return true;
