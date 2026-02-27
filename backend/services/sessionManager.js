@@ -1,4 +1,5 @@
 const activeSessions = new Map();
+const invalidatedTokens = new Set();
 let io = null;
 
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
@@ -17,9 +18,27 @@ const sessionManager = {
         this.emitUpdate();
     },
 
-    removeSession(userId) {
+    removeSession(userId, token = null) {
         activeSessions.delete(userId);
+        // If a token is provided, add it to the blacklist to invalidate it
+        if (token) {
+            invalidatedTokens.add(token);
+        }
         this.emitUpdate();
+    },
+
+    /**
+     * Check if a token has been invalidated
+     */
+    isTokenInvalidated(token) {
+        return invalidatedTokens.has(token);
+    },
+
+    /**
+     * Invalidate a specific token (for admin-initiated disconnects)
+     */
+    invalidateToken(token) {
+        invalidatedTokens.add(token);
     },
 
     updateActivity(userId) {

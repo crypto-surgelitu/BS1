@@ -82,9 +82,11 @@ router.get('/active-users', authenticate, async (req, res) => {
 router.post('/disconnect-user/:userId', authenticate, userIdParamValidation, async (req, res) => {
     try {
         const adminRole = req.user.role;
+        console.log('[DEBUG] User role:', adminRole, 'User ID:', req.user.id);
         
         // Only admin and super_admin can disconnect users
         if (adminRole !== 'admin' && adminRole !== 'super_admin') {
+            console.log('[DEBUG] Access denied - role not admin or super_admin');
             return res.status(403).json({ error: 'Admin access required' });
         }
         
@@ -118,7 +120,7 @@ router.post('/disconnect-user/:userId', authenticate, userIdParamValidation, asy
         }
         
         sessionManager.removeSession(userIdToDisconnect);
-        res.json({ message: 'User disconnected successfully' });
+        res.json({ message: 'User disconnected successfully', disconnectedUserId: userIdToDisconnect });
     } catch (error) {
         console.error('Disconnect user error:', error);
         res.status(500).json({ error: 'Failed to disconnect user' });

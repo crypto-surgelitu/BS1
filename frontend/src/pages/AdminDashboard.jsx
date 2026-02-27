@@ -98,6 +98,10 @@ const AdminDashboard = () => {
         try {
             const result = await authService.disconnectUser(id);
             if (result.success) {
+                if (result.selfDisconnected) {
+                    // User was disconnected - they will be redirected via authService
+                    return;
+                }
                 // Remove from local state immediately
                 setActiveSessions(prev => prev.filter(s => s.id !== id));
                 alert('User disconnected successfully');

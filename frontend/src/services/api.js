@@ -132,6 +132,11 @@ async function apiFetch(endpoint, options = {}, requiresAuth = false) {
                 const newToken = await refreshAccessToken();
                 config.headers['Authorization'] = `Bearer ${newToken}`;
                 response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+            } else if (errorData.code === 'SESSION_TERMINATED' || errorData.code === 'TOKEN_INVALIDATED') {
+                // User was disconnected by admin - redirect to login
+                clearAuth();
+                window.location.href = '/login';
+                return response;
             }
         } catch (error) {
             clearAuth();

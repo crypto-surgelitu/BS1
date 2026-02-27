@@ -263,6 +263,14 @@ const authService = {
         });
 
         if (response.ok) {
+            const data = await response.json();
+            // Check if current user was disconnected
+            const currentUser = this.getCurrentUser();
+            if (currentUser && currentUser.id === data.disconnectedUserId) {
+                clearAuth();
+                window.location.href = '/login';
+                return { success: true, selfDisconnected: true };
+            }
             return { success: true };
         }
 

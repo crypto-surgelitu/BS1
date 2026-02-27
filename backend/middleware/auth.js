@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const SettingsModel = require('../models/settingsModel');
+const sessionManager = require('../services/sessionManager');
 
 /**
  * Authentication Middleware
@@ -29,8 +30,26 @@ const authenticate = async (req, res, next) => {
             });
         }
 
+        // Check if token has been invalidated (e.g., user was disconnected)
+        if (sessionManager.isTokenInvalidated(token)) {
+            return res.status(401).json({ 
+                error: 'Session terminated. Please login again.',
+                code: 'TOKEN_INVALIDATED'
+            });
+        }
+
         // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        // Check if user still has an active session (if session was removed, token is invalid)
+        const activeSessions = sessionManager.getAllSessions();
+        const userSession = activeSessions.find(s => s.userId === decoded.userId);
+        if (!userSession) {
+            return res.status(401).json({ 
+                error: 'Session terminated. Please login again.',
+                code: 'SESSION_TERMINATED'
+            });
+        }
         
         // Attach user info to request object
         req.user = {
