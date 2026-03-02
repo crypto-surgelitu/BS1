@@ -390,9 +390,6 @@ const authController = {
             res.status(500).json({ error: 'Admin login failed. Please try again later.' });
         }
     },
-            res.status(500).json({ error: 'Admin login failed' });
-        }
-    },
 
     // ----------------------------------------------------------
     // EMAIL VERIFICATION
