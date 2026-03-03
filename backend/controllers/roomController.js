@@ -5,9 +5,16 @@ const roomController = {
     async getRooms(req, res) {
         const today = new Date().toLocaleDateString('en-CA');
         const date = req.query.date || today;
+        const requiredAmenities = req.query.required ? req.query.required.split(',').map(a => a.trim()).filter(a => a) : [];
+        const preferredAmenities = req.query.preferred ? req.query.preferred.split(',').map(a => a.trim()).filter(a => a) : [];
 
         try {
-            const rooms = await RoomModel.findAll(date);
+            let rooms;
+            if (requiredAmenities.length > 0 || preferredAmenities.length > 0) {
+                rooms = await RoomModel.findAvailableWithFilters(date, requiredAmenities, preferredAmenities);
+            } else {
+                rooms = await RoomModel.findAll(date);
+            }
 
             // Parse JSON amenities and determine status
             const processedRooms = rooms.map(room => {
@@ -19,7 +26,9 @@ const roomController = {
                 return {
                     ...room,
                     status: status,
-                    amenities: JSON.parse(room.amenities || '[]')
+                    amenities: JSON.parse(room.amenities || '[]'),
+                    matchedPreferredCount: room.matchedPreferredCount || 0,
+                    preferredMatchPercentage: room.preferredMatchPercentage || 0
                 };
             });
 

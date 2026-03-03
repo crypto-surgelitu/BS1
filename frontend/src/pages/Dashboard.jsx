@@ -215,7 +215,11 @@ const Dashboard = () => {
     const filteredRooms = rooms.filter(room => {
         const matchesSearch = (room.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
             room.amenities?.some(amenity => amenity?.toLowerCase()?.includes(searchTerm.toLowerCase()));
-        return currentView === 'available' ? matchesSearch : false;
+        // For available view, only show rooms that can be booked
+        if (currentView === 'available') {
+            return matchesSearch && room.status === 'Available';
+        }
+        return matchesSearch;
     });
 
     const filteredBookings = userBookings.filter(booking => {

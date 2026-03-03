@@ -19,6 +19,7 @@ const roomRoutes = require('./routes/roomRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const superAdminRoutes = require('./routes/superAdminRoutes');
 const faqRoutes = require('./routes/faqRoutes');
+const preferencesRoutes = require('./routes/preferencesRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -125,6 +126,7 @@ app.use('/rooms', roomRoutes);
 app.use('/', bookingRoutes);
 app.use('/super-admin', superAdminRoutes);
 app.use('/', faqRoutes);
+app.use('/', preferencesRoutes);
 
 startReminderCron();
 startWorkingHoursCron();

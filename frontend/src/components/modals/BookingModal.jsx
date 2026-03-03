@@ -1,6 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Calendar as CalendarIcon, Clock, ChevronDown, ChevronLeft, ChevronRight, AlertCircle, Users } from 'lucide-react';
+import { X, Calendar as CalendarIcon, Clock, ChevronDown, ChevronLeft, ChevronRight, AlertCircle, Users, Star } from 'lucide-react';
 import bookingService from '../../services/bookingService';
+import preferencesService from '../../services/preferencesService';
+
+const AVAILABLE_AMENITIES = [
+    'WiFi',
+    'Air Conditioning',
+    'Projector',
+    'Whiteboard',
+    'Video Conferencing',
+    'Smart TV',
+    'Phone',
+    'Flip Chart',
+    'Sound System',
+    'Microphone'
+];
 
 const BookingModal = ({ isOpen, onClose, room, type, onSuccess }) => {
     // All hooks MUST run unconditionally (React rules of hooks)
@@ -18,6 +32,9 @@ const BookingModal = ({ isOpen, onClose, room, type, onSuccess }) => {
     const [progress, setProgress] = useState('');
     const [queueInfo, setQueueInfo] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
+    const [showAmenities, setShowAmenities] = useState(false);
+    const [requiredAmenities, setRequiredAmenities] = useState([]);
+    const [preferredAmenities, setPreferredAmenities] = useState([]);
     const dragModeRef = useRef(null);
     const calendarRef = useRef(null);
 
@@ -36,8 +53,23 @@ const BookingModal = ({ isOpen, onClose, room, type, onSuccess }) => {
             setSuccess(false);
             setProgress('');
             setQueueInfo(null);
+            setShowAmenities(false);
+            fetchUserPreferences();
         }
     }, [isOpen]);
+
+    const fetchUserPreferences = async () => {
+        try {
+            const res = await preferencesService.getPreferences();
+            if (res.ok) {
+                const data = await res.json();
+                setRequiredAmenities(data.requiredAmenities || []);
+                setPreferredAmenities(data.preferredAmenities || []);
+            }
+        } catch (err) {
+            console.error('Error fetching preferences:', err);
+        }
+    };
 
     // FIX: Use conditional rendering at JSX level instead of early return
     // This ensures all hooks always run in the same order on every render
@@ -175,7 +207,9 @@ const BookingModal = ({ isOpen, onClose, room, type, onSuccess }) => {
                 roomId: room.id,
                 startTime: convertTime(formData.startTime),
                 endTime: convertTime(formData.endTime),
-                type: type
+                type: type,
+                requiredAmenities: requiredAmenities,
+                preferredAmenities: preferredAmenities
             };
 
             if (isReservation) {
@@ -467,6 +501,75 @@ const BookingModal = ({ isOpen, onClose, room, type, onSuccess }) => {
                                 </select>
                                 <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                             </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowAmenities(!showAmenities)}
+                                className="flex items-center text-sm font-semibold text-gray-700 hover:text-[#0B4F6C] transition-colors"
+                            >
+                                <Star className="w-4 h-4 mr-1.5" />
+                                Room Requirements {showAmenities ? '(hide)' : '(optional)'}
+                            </button>
+
+                            {showAmenities && (
+                                <div className="space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-2">
+                                            Required Amenities (must have)
+                                        </label>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {AVAILABLE_AMENITIES.map(amenity => (
+                                                <button
+                                                    key={`req-${amenity}`}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (requiredAmenities.includes(amenity)) {
+                                                            setRequiredAmenities(requiredAmenities.filter(a => a !== amenity));
+                                                        } else {
+                                                            setRequiredAmenities([...requiredAmenities, amenity]);
+                                                        }
+                                                    }}
+                                                    className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${requiredAmenities.includes(amenity)
+                                                            ? 'bg-[#0B4F6C] text-white'
+                                                            : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
+                                                        }`}
+                                                >
+                                                    {amenity}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-2">
+                                            Preferred Amenities (nice to have)
+                                        </label>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {AVAILABLE_AMENITIES.map(amenity => (
+                                                <button
+                                                    key={`pref-${amenity}`}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (preferredAmenities.includes(amenity)) {
+                                                            setPreferredAmenities(preferredAmenities.filter(a => a !== amenity));
+                                                        } else {
+                                                            setPreferredAmenities([...preferredAmenities, amenity]);
+                                                        }
+                                                    }}
+                                                    className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${preferredAmenities.includes(amenity)
+                                                            ? 'bg-[#20B2AA] text-white'
+                                                            : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
+                                                        }`}
+                                                >
+                                                    {amenity}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-100">

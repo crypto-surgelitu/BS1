@@ -17,7 +17,7 @@ const formatDateDisplay = (dateStr) => {
 const bookingController = {
     // BOOK ROOM
     async createBooking(req, res) {
-        const { userId, roomId, date, startTime, endTime, type, dates } = req.body;
+        const { userId, roomId, date, startTime, endTime, type, dates, requiredAmenities, preferredAmenities } = req.body;
 
         const bookingType = type === 'reservation' ? 'reservation' : 'booking';
 
@@ -114,7 +114,9 @@ const bookingController = {
                 date: d,
                 startTime,
                 endTime,
-                type: bookingType
+                type: bookingType,
+                requiredAmenities: requiredAmenities || [],
+                preferredAmenities: preferredAmenities || []
             }));
 
             const results = await BookingModel.createMany(bookingsToCreate);

@@ -22,10 +22,10 @@ const BookingModel = {
         }
     },
 
-    async create(userId, roomId, date, startTime, endTime, type) {
+    async create(userId, roomId, date, startTime, endTime, type, requiredAmenities = null, preferredAmenities = null) {
         const [result] = await dbPromise.query(
-            'INSERT INTO bookings (user_id, room_id, booking_date, start_time, end_time, type, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [userId, roomId, date, startTime, endTime, type, 'pending']
+            'INSERT INTO bookings (user_id, room_id, booking_date, start_time, end_time, type, status, required_amenities, preferred_amenities) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [userId, roomId, date, startTime, endTime, type, 'pending', JSON.stringify(requiredAmenities || []), JSON.stringify(preferredAmenities || [])]
         );
         return result;
     },
@@ -39,6 +39,10 @@ const BookingModel = {
              WHERE b.id = ?`,
             [id]
         );
+        if (rows.length > 0) {
+            rows[0].required_amenities = rows[0].required_amenities ? JSON.parse(rows[0].required_amenities) : [];
+            rows[0].preferred_amenities = rows[0].preferred_amenities ? JSON.parse(rows[0].preferred_amenities) : [];
+        }
         return rows;
     },
 
@@ -60,6 +64,8 @@ const BookingModel = {
                 b.type,
                 b.status,
                 b.created_at,
+                b.required_amenities,
+                b.preferred_amenities,
                 r.name as room_name,
                 r.space,
                 u.full_name as user_name,
@@ -69,7 +75,11 @@ const BookingModel = {
             LEFT JOIN users u ON b.user_id = u.id
             ORDER BY b.booking_date DESC, b.start_time DESC`
         );
-        return rows;
+        return rows.map(row => ({
+            ...row,
+            required_amenities: row.required_amenities ? JSON.parse(row.required_amenities) : [],
+            preferred_amenities: row.preferred_amenities ? JSON.parse(row.preferred_amenities) : []
+        }));
     },
 
     async findByUserId(userId) {
@@ -84,6 +94,8 @@ const BookingModel = {
                     b.status,
                     b.cancellation_reason,
                     b.created_at,
+                    b.required_amenities,
+                    b.preferred_amenities,
                     r.name as room_name,
                     r.space,
                     r.capacity
@@ -93,7 +105,11 @@ const BookingModel = {
                 ORDER BY b.booking_date DESC, b.start_time DESC`,
                 [userId]
             );
-            return rows;
+            return rows.map(row => ({
+                ...row,
+                required_amenities: row.required_amenities ? JSON.parse(row.required_amenities) : [],
+                preferred_amenities: row.preferred_amenities ? JSON.parse(row.preferred_amenities) : []
+            }));
         } catch (error) {
             console.error('Error in findByUserId:', error);
             throw error;
@@ -153,8 +169,18 @@ const BookingModel = {
             const results = [];
             for (const booking of bookings) {
                 const [result] = await connection.query(
-                    'INSERT INTO bookings (user_id, room_id, booking_date, start_time, end_time, type, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                    [booking.userId, booking.roomId, booking.date, booking.startTime, booking.endTime, booking.type, 'pending']
+                    'INSERT INTO bookings (user_id, room_id, booking_date, start_time, end_time, type, status, required_amenities, preferred_amenities) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [
+                        booking.userId, 
+                        booking.roomId, 
+                        booking.date, 
+                        booking.startTime, 
+                        booking.endTime, 
+                        booking.type, 
+                        'pending',
+                        JSON.stringify(booking.requiredAmenities || []),
+                        JSON.stringify(booking.preferredAmenities || [])
+                    ]
                 );
                 results.push({ ...booking, id: result.insertId });
             }

@@ -21,7 +21,9 @@ router.post('/book',
     bookingValidation,
     [
         body('notes').optional().isLength({ max: 500 }).withMessage('Notes cannot exceed 500 characters'),
-        body('category').optional().isIn(['meeting', 'event', 'training', 'co-working', 'other']).withMessage('Invalid category')
+        body('category').optional().isIn(['meeting', 'event', 'training', 'co-working', 'other']).withMessage('Invalid category'),
+        body('requiredAmenities').optional().isArray().withMessage('Required amenities must be an array'),
+        body('preferredAmenities').optional().isArray().withMessage('Preferred amenities must be an array')
     ],
     handleValidationErrors,
     AuditLogger.middleware('BOOKING_CREATED', 'booking'),

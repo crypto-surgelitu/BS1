@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } f
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
+import PreferencesPage from './pages/PreferencesPage';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
@@ -29,6 +30,7 @@ function AppContent() {
 
         {/* User dashboard */}
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/preferences" element={<PreferencesPage />} />
 
         {/* Admin routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
