@@ -1,4 +1,4 @@
-require('dotenv').config();
+// Note: dotenv.config() is already called in server.js before this module is imported
 const mysql = require('mysql2');
 
 const isProduction = process.env.NODE_ENV === 'production';

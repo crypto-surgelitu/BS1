@@ -409,6 +409,7 @@ const Dashboard = () => {
 
                                     {booking.status !== 'cancelled' && (
                                         <button
+                                            type="button"
                                             id={`cancel-btn-${booking.id}`}
                                             title="Cancel this booking"
                                             onClick={() => openCancelModal(booking)}
