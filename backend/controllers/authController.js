@@ -539,6 +539,54 @@ const authController = {
     },
 
     // ----------------------------------------------------------
+    // RESEND FORGOT PASSWORD PIN (No captcha required)
+    // ----------------------------------------------------------
+    async resendForgotPasswordPin(req, res) {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+
+        try {
+            const users = await UserModel.findByEmail(email);
+
+            if (users.length === 0) {
+                return res.json({ message: 'If that email is registered, a password reset PIN has been sent.' });
+            }
+
+            const user = users[0];
+            
+            // Generate 6-digit PIN
+            const resetPin = crypto.randomInt(100000, 999999).toString();
+            const resetExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+            
+            await UserModel.setPasswordResetToken(user.id, resetPin, resetExpires);
+
+            mailerService.sendMail(
+                email,
+                'Password Reset PIN - SwahiliPot Hub',
+                `Your password reset PIN is: ${resetPin}\n\nThis PIN expires in 15 minutes.`,
+                `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+                    <h2 style="color:#0B4F6C;">Password Reset PIN</h2>
+                    <p>Hello <strong>${user.full_name}</strong>,</p>
+                    <p>We received a request to reset your password. Use the PIN below:</p>
+                    <div style="font-size:32px;font-weight:bold;letter-spacing:8px;padding:20px;background:#f3f4f6;border-radius:8px;margin:20px 0;text-align:center;color:#0B4F6C;">${resetPin}</div>
+                    <p style="color:#666;font-size:14px;">This PIN expires in <strong>15 minutes</strong>.</p>
+                    <p style="color:#666;font-size:12px;">If you didn't request this, ignore this email.</p>
+                </div>`
+            ).catch(err => console.error('Failed to send forgot password email:', err.message));
+
+            console.log(`📧 Password reset PIN resent to: ${email}`);
+            res.json({ message: 'If that email is registered, a password reset PIN has been sent.' });
+
+        } catch (error) {
+            console.error('Resend forgot password error:', error);
+            res.status(500).json({ error: 'Failed to resend password reset PIN' });
+        }
+    },
+
+    // ----------------------------------------------------------
     // RESET PASSWORD WITH PIN + SEND OTP FOR NEXT LOGIN
     // ----------------------------------------------------------
     async resetPasswordWithPin(req, res) {

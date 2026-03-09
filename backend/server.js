@@ -20,6 +20,8 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const superAdminRoutes = require('./routes/superAdminRoutes');
 const faqRoutes = require('./routes/faqRoutes');
 const preferencesRoutes = require('./routes/preferencesRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+const publicReviews = require('./routes/publicReviews');
 
 const app = express();
 const server = http.createServer(app);
@@ -127,6 +129,8 @@ app.use('/', bookingRoutes);
 app.use('/super-admin', superAdminRoutes);
 app.use('/', faqRoutes);
 app.use('/', preferencesRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/public-reviews', publicReviews);
 
 startReminderCron();
 startWorkingHoursCron();

@@ -161,6 +161,14 @@ router.post('/forgot-password',
     authController.forgotPassword
 );
 
+// POST /resend-forgot-password-pin - Resend password reset PIN (no captcha required)
+router.post('/resend-forgot-password-pin',
+    authLimiter,
+    [body('email').isEmail().normalizeEmail().withMessage('Valid email is required')],
+    handleValidationErrors,
+    authController.resendForgotPasswordPin
+);
+
 // POST /reset-password-pin - Reset password with PIN
 router.post('/reset-password-pin',
     authLimiter,

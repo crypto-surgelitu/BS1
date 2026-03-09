@@ -185,6 +185,23 @@ const authService = {
     },
 
     /**
+     * Resend password reset PIN (no captcha required)
+     */
+    async resendForgotPasswordPin(email) {
+        const response = await apiFetch('/resend-forgot-password-pin', {
+            method: 'POST',
+            body: { email },
+        });
+
+        if (response.ok) {
+            return { success: true };
+        }
+
+        const error = await response.json();
+        return { success: false, error: error.error };
+    },
+
+    /**
      * Reset password with PIN
      */
     async resetPasswordWithPin(pin, newPassword) {

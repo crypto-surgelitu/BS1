@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Calendar as CalendarIcon, Clock, ChevronDown, ChevronLeft, ChevronRight, AlertCircle, Users, Star } from 'lucide-react';
 import bookingService from '../../services/bookingService';
 import preferencesService from '../../services/preferencesService';
+import ReviewPopup from './ReviewPopup';
 
 const AVAILABLE_AMENITIES = [
     'WiFi',
@@ -35,6 +36,8 @@ const BookingModal = ({ isOpen, onClose, room, type, onSuccess }) => {
     const [showAmenities, setShowAmenities] = useState(false);
     const [requiredAmenities, setRequiredAmenities] = useState([]);
     const [preferredAmenities, setPreferredAmenities] = useState([]);
+    const [showReview, setShowReview] = useState(false);
+    const [bookedRoom, setBookedRoom] = useState(null);
     const dragModeRef = useRef(null);
     const calendarRef = useRef(null);
 
@@ -54,6 +57,8 @@ const BookingModal = ({ isOpen, onClose, room, type, onSuccess }) => {
             setProgress('');
             setQueueInfo(null);
             setShowAmenities(false);
+            setShowReview(false);
+            setBookedRoom(null);
             fetchUserPreferences();
         }
     }, [isOpen]);
@@ -230,12 +235,20 @@ const BookingModal = ({ isOpen, onClose, room, type, onSuccess }) => {
                 setProgress('');
                 if (data.booking && data.booking.queuePositions && Object.keys(data.booking.queuePositions).length > 0) {
                     setQueueInfo(data.booking.queuePositions);
+                    setSuccess(true);
+                    setTimeout(() => {
+                        onClose();
+                        if (onSuccess) onSuccess(type);
+                    }, 1500);
+                } else {
+                    setSuccess(true);
+                    setBookedRoom(room?.name || 'the room');
+                    setShowReview(true);
+                    setTimeout(() => {
+                        onClose();
+                        if (onSuccess) onSuccess(type);
+                    }, 1500);
                 }
-                setSuccess(true);
-                setTimeout(() => {
-                    onClose();
-                    if (onSuccess) onSuccess(type);
-                }, 1500);
             } else {
                 setProgress('');
                 const errorMsg = data.error || data.details || data.message || 'Booking failed';
@@ -310,9 +323,22 @@ const BookingModal = ({ isOpen, onClose, room, type, onSuccess }) => {
         return days;
     };
 
-    // FIX: Conditional rendering at JSX level instead of early return
-    // This ensures useEffect is ALWAYS called regardless of isOpen/room/type values
-    if (!isOpen) return null;
+    if (!isOpen) return (
+        <>
+            <ReviewPopup
+                isOpen={showReview}
+                onClose={() => setShowReview(false)}
+                onSubmit={async ({ rating, label }) => {
+                    await fetch("http://localhost:3000/api/public-reviews", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ rating, label, roomName: bookedRoom }),
+                    });
+                }}
+                actionLabel={`booking ${bookedRoom || "the room"}`}
+            />
+        </>
+    );
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

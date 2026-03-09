@@ -33,7 +33,7 @@ const ResetPasswordPin = () => {
     const handleResendPin = async () => {
         setResending(true);
         try {
-            const response = await authService.forgotPassword(email);
+            const response = await authService.resendForgotPasswordPin(email);
             if (response.success) {
                 setCountdown(60);
                 alert('A new PIN has been sent to your email.');

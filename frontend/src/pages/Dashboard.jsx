@@ -104,7 +104,9 @@ const Dashboard = () => {
     }, []);
 
     const handleNavigate = (viewId) => {
-        if (viewId === 'home' || viewId === 'available') {
+        if (viewId === 'reviews') {
+            navigate('/my-reviews');
+        } else if (viewId === 'home' || viewId === 'available') {
             setCurrentView('available');
         } else {
             setCurrentView(viewId);
