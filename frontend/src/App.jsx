@@ -9,7 +9,6 @@ import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPasswordPin from './pages/ResetPasswordPin';
 import VerifyEmail from './pages/VerifyEmail';
-import MyReviews from './pages/MyReviews';
 import AdminReviews from './pages/AdminReviews';
 import ChatbotWidget from './components/ChatbotWidget';
 
@@ -33,7 +32,6 @@ function AppContent() {
         {/* User dashboard */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/preferences" element={<PreferencesPage />} />
-        <Route path="/my-reviews" element={<MyReviews />} />
 
         {/* Admin routes */}
         <Route path="/admin/login" element={<AdminLogin />} />

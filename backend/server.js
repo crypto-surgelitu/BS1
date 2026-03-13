@@ -113,8 +113,6 @@ app.get('/health', async (req, res) => {
     }
 });
 
-app.get('/api/csrf-token', getCsrfToken);
-
 app.get('/migrate', (req, res) => {
     res.json({
         message: 'Data migration endpoint reached.',

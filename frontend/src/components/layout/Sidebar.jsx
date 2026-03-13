@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, LayoutGrid, Bookmark, Calendar, LogOut, X, MessageSquare } from 'lucide-react';
+import { Home, LayoutGrid, Bookmark, Calendar, LogOut, X } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose, currentView, onNavigate, onLogout }) => {
     const menuItems = [
@@ -7,7 +7,6 @@ const Sidebar = ({ isOpen, onClose, currentView, onNavigate, onLogout }) => {
         { id: 'available', label: 'Rooms', icon: LayoutGrid },
         { id: 'reserved', label: 'Reserved Rooms', icon: Bookmark },
         { id: 'booked', label: 'Booked Rooms', icon: Calendar },
-        { id: 'reviews', label: 'My Reviews', icon: MessageSquare },
     ];
 
     return (

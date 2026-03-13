@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Calendar as CalendarIcon, Clock, ChevronDown, ChevronLeft, ChevronRight, AlertCircle, Users, Star } from 'lucide-react';
 import bookingService from '../../services/bookingService';
 import preferencesService from '../../services/preferencesService';
-import ReviewPopup from './ReviewPopup';
+import ReviewPopup from '../ReviewPopup';
 
 const AVAILABLE_AMENITIES = [
     'WiFi',

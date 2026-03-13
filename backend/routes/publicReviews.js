@@ -14,8 +14,8 @@ router.post("/", async (req, res) => {
     
     try {
         await dbPromise.query(
-            "INSERT INTO reviews (rating, comment, status, created_at) VALUES (?, ?, ?, NOW())",
-            [rating, label, "published"]
+            "INSERT INTO reviews (rating, comment, room_name, status, created_at) VALUES (?, ?, ?, ?, NOW())",
+            [rating, label, roomName, "published"]
         );
         res.json({ success: true });
     } catch (err) {

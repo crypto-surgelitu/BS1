@@ -33,7 +33,7 @@ const setCsrfToken = (req, res, next) => {
         res.cookie(CSRF_COOKIE_NAME, token, {
             httpOnly: false,       // Must be readable by JS
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: 'lax',
             maxAge: 24 * 60 * 60 * 1000 // 24 hours
         });
         req.csrfToken = token;
@@ -104,7 +104,7 @@ const getCsrfToken = (req, res) => {
         res.cookie(CSRF_COOKIE_NAME, newToken, {
             httpOnly: false,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: 'lax',
             maxAge: 24 * 60 * 60 * 1000
         });
         return res.json({ csrfToken: newToken });

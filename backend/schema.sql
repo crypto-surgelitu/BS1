@@ -8,9 +8,26 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(255) NOT NULL,
     department VARCHAR(255),
-    role ENUM('admin', 'user') DEFAULT 'user',
+    role ENUM('super_admin', 'admin', 'user') DEFAULT 'user',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    -- Security & Authentication
+    failed_login_attempts INT DEFAULT 0,
+    locked_until TIMESTAMP NULL,
+    -- Email Verification
+    email_verified BOOLEAN DEFAULT FALSE,
+    verification_token VARCHAR(255) NULL,
+    verification_expires TIMESTAMP NULL,
+    -- Password Reset
+    password_reset_token VARCHAR(255) NULL,
+    password_reset_expires TIMESTAMP NULL,
+    password_reset_at TIMESTAMP NULL,
+    -- Login OTP (for post-password-reset verification)
+    login_otp VARCHAR(6) NULL,
+    login_otp_expires TIMESTAMP NULL,
+    -- Two-Factor Authentication
+    totp_enabled BOOLEAN DEFAULT FALSE,
+    totp_secret VARCHAR(255) NULL,
     INDEX idx_email (email),
     INDEX idx_role (role)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -73,11 +90,33 @@ CREATE TABLE IF NOT EXISTS reviews (
 INSERT INTO users (email, password_hash, full_name, department, role) 
 VALUES (
     'admin@swahilipothub.co.ke', 
-    '$2b$10$FuW/mbXzrfVwjQXzKuNOn/2vuM2YDtpkHz4BS0hOjvQtPyXn',
+    '$2b$10$MeRBMJH2l/L5Fe8DInQ2t.U.4ZLq5AVxc1YIc5yvMh/OqP3uMJVhS',
     'Admin User',
     'Administration',
     'admin'
 ) ON DUPLICATE KEY UPDATE email=email;
+
+-- Create system_settings table (needed for working hours during login)
+CREATE TABLE IF NOT EXISTS system_settings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    setting_key VARCHAR(100) UNIQUE NOT NULL,
+    setting_value TEXT,
+    description VARCHAR(255),
+    updated_by INT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_setting_key (setting_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Insert default system settings
+INSERT INTO system_settings (setting_key, setting_value, description) VALUES
+('working_hours_start', '08:00', 'Default booking start time'),
+('working_hours_end', '18:00', 'Default booking end time'),
+('maintenance_mode', 'false', 'System maintenance mode flag'),
+('require_email_verification', 'true', 'Require email verification for new users'),
+('max_booking_days_ahead', '30', 'Maximum days in advance for bookings'),
+('enable_multi_date_reservation', 'true', 'Allow multi-date reservations')
+ON DUPLICATE KEY UPDATE setting_key = setting_key;
 
 -- Success message
 SELECT 'Database schema created successfully!' AS message;
