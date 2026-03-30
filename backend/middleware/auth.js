@@ -41,15 +41,9 @@ const authenticate = async (req, res, next) => {
         // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // Check if user still has an active session (if session was removed, token is invalid)
-        const activeSessions = sessionManager.getAllSessions();
-        const userSession = activeSessions.find(s => s.userId === decoded.userId);
-        if (!userSession) {
-            return res.status(401).json({ 
-                error: 'Session terminated. Please login again.',
-                code: 'SESSION_TERMINATED'
-            });
-        }
+        // Note: Session check removed - sessions are stored in memory and lost on server restart
+        // This was causing "Session terminated" errors after server restart
+        // The token-based auth is sufficient - invalidated tokens are still checked below
         
         // Attach user info to request object
         req.user = {

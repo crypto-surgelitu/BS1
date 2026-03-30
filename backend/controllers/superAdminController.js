@@ -328,6 +328,7 @@ const superAdminController = {
                 SELECT 
                     COUNT(*) as total_users,
                     SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) as admin_count,
+                    SUM(CASE WHEN role = 'super_admin' THEN 1 ELSE 0 END) as super_admin_count,
                     SUM(CASE WHEN role = 'user' THEN 1 ELSE 0 END) as regular_users,
                     SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 ELSE 0 END) as new_users_30d
                 FROM users
@@ -340,6 +341,7 @@ const superAdminController = {
                     SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_bookings,
                     SUM(CASE WHEN status = 'confirmed' THEN 1 ELSE 0 END) as confirmed_bookings,
                     SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected_bookings,
+                    SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_bookings,
                     SUM(CASE WHEN type = 'booking' THEN 1 ELSE 0 END) as bookings,
                     SUM(CASE WHEN type = 'reservation' THEN 1 ELSE 0 END) as reservations
                 FROM bookings
@@ -350,15 +352,21 @@ const superAdminController = {
                 SELECT COUNT(*) as total_rooms FROM rooms
             `);
 
-            // Recent activity
-            const [recentActivity] = await db.query(`
-                SELECT action, COUNT(*) as count
-                FROM audit_logs
-                WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-                GROUP BY action
-                ORDER BY count DESC
-                LIMIT 10
-            `);
+            // Recent activity - handle missing audit_logs table
+            let recentActivity = [];
+            try {
+                const [activity] = await db.query(`
+                    SELECT action, COUNT(*) as count
+                    FROM audit_logs
+                    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+                    GROUP BY action
+                    ORDER BY count DESC
+                    LIMIT 10
+                `);
+                recentActivity = activity;
+            } catch (e) {
+                console.warn('audit_logs table not available:', e.message);
+            }
 
             res.json({
                 users: userStats[0],

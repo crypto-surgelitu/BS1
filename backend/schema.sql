@@ -96,6 +96,16 @@ VALUES (
     'admin'
 ) ON DUPLICATE KEY UPDATE email=email;
 
+-- Insert default superadmin user (password: superadmin123)
+INSERT INTO users (email, password_hash, full_name, department, role) 
+VALUES (
+    'superadmin@bs1.com', 
+    '$2b$10$FuW/mbXzrfVwjQXzKuNOn/2vuM2YDtpkHz4BS0hOjvQtPyXn',
+    'Super Admin',
+    'Administration',
+    'super_admin'
+) ON DUPLICATE KEY UPDATE email=email;
+
 -- Create system_settings table (needed for working hours during login)
 CREATE TABLE IF NOT EXISTS system_settings (
     id INT AUTO_INCREMENT PRIMARY KEY,

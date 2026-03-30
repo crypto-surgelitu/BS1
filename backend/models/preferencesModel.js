@@ -3,7 +3,7 @@ const { dbPromise } = require('../config/db');
 const PreferencesModel = {
     async findByUserId(userId) {
         const [rows] = await dbPromise.query(
-            'SELECT * FROM user_preferences WHERE user_id = ?',
+            'SELECT * FROM preferences WHERE user_id = ?',
             [userId]
         );
         return rows.length > 0 ? rows[0] : null;
@@ -13,7 +13,7 @@ const PreferencesModel = {
         let preferences = await this.findByUserId(userId);
         if (!preferences) {
             const [result] = await dbPromise.query(
-                'INSERT INTO user_preferences (user_id) VALUES (?)',
+                'INSERT INTO preferences (user_id) VALUES (?)',
                 [userId]
             );
             preferences = {
@@ -32,7 +32,7 @@ const PreferencesModel = {
         
         if (existing) {
             await dbPromise.query(
-                `UPDATE user_preferences 
+                `UPDATE preferences 
                  SET required_amenities = ?, preferred_amenities = ?, default_use_case = ?
                  WHERE user_id = ?`,
                 [
@@ -44,7 +44,7 @@ const PreferencesModel = {
             );
         } else {
             await dbPromise.query(
-                `INSERT INTO user_preferences (user_id, required_amenities, preferred_amenities, default_use_case)
+                `INSERT INTO preferences (user_id, required_amenities, preferred_amenities, default_use_case)
                  VALUES (?, ?, ?, ?)`,
                 [
                     userId,

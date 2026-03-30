@@ -147,6 +147,14 @@ async function repairDatabase() {
         `);
         console.log('   ✅ Admin user created (password: admin123)\n');
 
+        // Insert default superadmin user
+        console.log('6b. Inserting default superadmin user...');
+        await connection.query(`
+            INSERT INTO users (email, password_hash, full_name, department, role) 
+            VALUES ('superadmin@bs1.com', '$2b$10$FuW/mbXzrfVwjQXzKuNOn/2vuM2YDtpkHz4BS0hOjvQtPyXn', 'Super Admin', 'Administration', 'super_admin')
+        `);
+        console.log('   ✅ Superadmin user created (password: superadmin123)\n');
+
         // Insert default system settings
         console.log('7. Inserting default system settings...');
         await connection.query(`
@@ -176,6 +184,9 @@ async function repairDatabase() {
         console.log('\nDefault admin login:');
         console.log('  Email: admin@swahilipothub.co.ke');
         console.log('  Password: admin123');
+        console.log('\nDefault superadmin login:');
+        console.log('  Email: superadmin@bs1.com');
+        console.log('  Password: superadmin123');
 
     } catch (error) {
         console.error('❌ Database repair failed:', error.message);

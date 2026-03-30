@@ -5,7 +5,9 @@ const preferencesController = {
     async getPreferences(req, res) {
         try {
             const userId = req.user.id;
+            console.log('[DEBUG] getPreferences called for userId:', userId);
             const preferences = await PreferencesModel.findOrCreate(userId);
+            console.log('[DEBUG] preferences found:', preferences);
             
             const response = {
                 requiredAmenities: preferences.required_amenities ? JSON.parse(preferences.required_amenities) : [],
@@ -16,7 +18,7 @@ const preferencesController = {
             res.json(response);
         } catch (error) {
             console.error('Error fetching preferences:', error);
-            res.status(500).json({ error: 'Failed to fetch preferences' });
+            res.status(500).json({ error: 'Failed to fetch preferences', details: error.message });
         }
     },
 
