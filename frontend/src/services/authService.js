@@ -69,6 +69,16 @@ const authService = {
                 };
             }
 
+            if (data.requirePasswordResetOtp) {
+                return {
+                    success: true,
+                    requirePasswordResetOtp: true,
+                    tempToken: data.tempToken,
+                    userId: data.userId,
+                    message: data.message
+                };
+            }
+
             saveTokens(data.accessToken, data.refreshToken);
             localStorage.setItem('user', JSON.stringify(data.user));
             return { success: true, data };

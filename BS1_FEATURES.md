@@ -472,7 +472,7 @@ SMTP_PASS=your_app_password
 # App
 PORT=3000
 FRONTEND_URL=http://localhost:5173
-ADMIN_EMAIL=admin@swahilipothub.co.ke
+ADMIN_EMAIL=admin@swahilipot.co.ke
 ```
 
 ---

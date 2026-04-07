@@ -12,6 +12,32 @@ const getCsrfCookie = () => {
 };
 
 /**
+ * Ensure the CSRF cookie exists before state-changing requests.
+ */
+const ensureCsrfToken = async () => {
+    const existingToken = getCsrfCookie();
+    if (existingToken) {
+        return existingToken;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/csrf-token`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        const data = await response.json().catch(() => null);
+        return data?.csrfToken || getCsrfCookie();
+    } catch (error) {
+        return null;
+    }
+};
+
+/**
  * Get access token from localStorage
  */
 const getAccessToken = () => {
@@ -91,6 +117,7 @@ async function apiFetch(endpoint, options = {}, requiresAuth = false) {
     const isStateMutating = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method);
 
     const config = {
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
             ...options.headers,
@@ -101,7 +128,7 @@ async function apiFetch(endpoint, options = {}, requiresAuth = false) {
     // Attach CSRF token for all state-changing requests (double-submit cookie pattern).
     // The backend sends the cookie via setCsrfToken middleware; we read and echo it back.
     if (isStateMutating) {
-        const csrfToken = getCsrfCookie();
+        const csrfToken = await ensureCsrfToken();
         if (csrfToken) {
             config.headers['X-CSRF-Token'] = csrfToken;
         }

@@ -1,54 +1,69 @@
 require('dotenv').config();
 const mysql = require('mysql2/promise');
-const bcrypt = require('bcrypt');
+const { DEFAULT_ADMIN, DEFAULT_SUPERADMIN, LEGACY_SYSTEM_EMAILS } = require('./config/systemAccounts');
 
-async function fixAdmin() {
-    const connection = await mysql.createConnection({
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASS,
-        database: process.env.DB_NAME
-    });
+const syncAccount = async (connection, account, legacyEmails = []) => {
+    const [existing] = await connection.execute(
+        `SELECT id, email
+         FROM users
+         WHERE role = ?
+            OR email = ?
+            OR email IN (${legacyEmails.map(() => '?').join(', ') || "''"})
+         ORDER BY email = ? DESC, role = ? DESC, id ASC
+         LIMIT 1`,
+        [account.role, account.email, ...legacyEmails, account.email, account.role]
+    );
+
+    if (existing.length > 0) {
+        await connection.execute(
+            `UPDATE users
+             SET email = ?, password_hash = ?, full_name = ?, department = ?, role = ?, email_verified = TRUE
+             WHERE id = ?`,
+            [account.email, account.passwordHash, account.fullName, account.department, account.role, existing[0].id]
+        );
+        console.log(`Updated ${account.role}: ${existing[0].email} -> ${account.email}`);
+        return;
+    }
+
+    await connection.execute(
+        'INSERT INTO users (email, password_hash, full_name, department, role, email_verified) VALUES (?, ?, ?, ?, ?, ?)',
+        [account.email, account.passwordHash, account.fullName, account.department, account.role, true]
+    );
+    console.log(`Created ${account.role}: ${account.email}`);
+};
+
+async function fixAdminAccounts() {
+    let connection;
 
     try {
-        console.log('--- DB CONNECTION SUCCESS ---');
+        connection = await mysql.createConnection({
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASS,
+            database: process.env.DB_NAME
+        });
 
-        // 1. Check tables
+        console.log('DB connection success');
+
         const [tables] = await connection.execute('SHOW TABLES');
-        console.log('Tables found:', tables.map(t => Object.values(t)[0]));
-
         if (tables.length === 0) {
-            console.error('❌ NO TABLES FOUND. Database is empty!');
+            console.error('No tables found. Database is empty.');
             return;
         }
 
-        // 2. Generate proper hash for "admin123"
-        const newHash = await bcrypt.hash('admin123', 10);
-        console.log('Generated new hash for "admin123"');
+        await syncAccount(connection, DEFAULT_ADMIN, LEGACY_SYSTEM_EMAILS);
+        await syncAccount(connection, DEFAULT_SUPERADMIN);
 
-        // 3. Update or Insert Admin
-        const email = 'admin@swahilipothub.co.ke';
-        const [rows] = await connection.execute('SELECT id FROM users WHERE email = ?', [email]);
-
-        if (rows.length > 0) {
-            await connection.execute(
-                'UPDATE users SET password_hash = ?, role = "admin" WHERE email = ?',
-                [newHash, email]
-            );
-            console.log(`✅ Updated existing admin: ${email}`);
-        } else {
-            await connection.execute(
-                'INSERT INTO users (email, password_hash, full_name, department, role) VALUES (?, ?, ?, ?, ?)',
-                [email, newHash, 'Admin User', 'Administration', 'admin']
-            );
-            console.log(`✅ Created new admin: ${email}`);
-        }
-
+        console.log('\nAdmin credentials synced:');
+        console.log(`Admin: ${DEFAULT_ADMIN.email} / admin@123`);
+        console.log(`Superadmin: ${DEFAULT_SUPERADMIN.email} / superadmin@123`);
     } catch (err) {
-        console.error('❌ Error:', err.message);
+        console.error('Error:', err.message);
     } finally {
-        await connection.end();
+        if (connection) {
+            await connection.end();
+        }
     }
 }
 
-fixAdmin();
+fixAdminAccounts();

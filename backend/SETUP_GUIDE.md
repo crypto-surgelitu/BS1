@@ -112,7 +112,7 @@ mysql -u root -p swahilipot_booking < schema.sql
    DB_NAME=swahilipot_booking
 
    # Admin Email (users cannot signup with this email)
-   ADMIN_EMAIL=admin@swahilipothub.co.ke
+   ADMIN_EMAIL=admin@swahilipot.co.ke
 
    # SMTP Configuration for Gmail
    SMTP_HOST=smtp.gmail.com

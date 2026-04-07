@@ -1,10 +1,12 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const axios = require('axios');
 const UserModel = require('../models/userModel');
 const SettingsModel = require('../models/settingsModel');
 const mailerService = require('../services/mailerService');
 const sessionManager = require('../services/sessionManager');
+const { DEFAULT_ADMIN, RESERVED_SYSTEM_EMAILS } = require('../config/systemAccounts');
 const {
     generateAccessToken,
     generateRefreshToken,
@@ -21,7 +23,21 @@ const LOCKOUT_DURATION_MINUTES = 10;
 // ============================================================
 // RECAPTCHA CONFIG
 // ============================================================
-const RECAPTCHA_SECRET_KEY = '6Ld9vHAsAAAAAFUfCudhT9SN3kzhBttCXLYu0QZA';
+const RECAPTCHA_SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY;
+const DATABASE_ERROR_CODES = new Set([
+    'ECONNREFUSED',
+    'ER_ACCESS_DENIED_ERROR',
+    'ENOTFOUND',
+    'PROTOCOL_CONNECTION_LOST'
+]);
+
+const isReservedSystemEmail = (email = '') => {
+    const normalizedEmail = email.toLowerCase();
+    const adminEmail = (process.env.ADMIN_EMAIL || DEFAULT_ADMIN.email || '').toLowerCase();
+    return RESERVED_SYSTEM_EMAILS.includes(normalizedEmail) || normalizedEmail === adminEmail;
+};
+
+const isDatabaseUnavailable = (error) => DATABASE_ERROR_CODES.has(error?.code);
 
 // ============================================================
 // AUTH CONTROLLER
@@ -35,8 +51,8 @@ const authController = {
     async signup(req, res) {
         const { email, password, fullName, department } = req.body;
 
-        if (email.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase()) {
-            return res.status(403).json({ error: 'Cannot use admin email for signup' });
+        if (isReservedSystemEmail(email)) {
+            return res.status(403).json({ error: 'Cannot use a reserved system email for signup' });
         }
 
         try {
@@ -86,6 +102,9 @@ const authController = {
 
         } catch (error) {
             console.error('Signup error:', error);
+            if (isDatabaseUnavailable(error)) {
+                return res.status(503).json({ error: 'Database connection failed. Please ensure MySQL is running.' });
+            }
             res.status(500).json({ error: 'Registration failed' });
         }
     },
@@ -233,6 +252,9 @@ const authController = {
 
         } catch (error) {
             console.error('Login error:', error.message);
+            if (isDatabaseUnavailable(error)) {
+                return res.status(503).json({ error: 'Database connection failed. Please ensure MySQL is running.' });
+            }
             res.status(500).json({ error: 'Login failed. Please try again later.' });
         }
     },
@@ -387,6 +409,9 @@ const authController = {
 
         } catch (error) {
             console.error('Admin login error:', error.message);
+            if (isDatabaseUnavailable(error)) {
+                return res.status(503).json({ error: 'Database connection failed. Please ensure MySQL is running.' });
+            }
             res.status(500).json({ error: 'Admin login failed. Please try again later.' });
         }
     },
@@ -478,10 +503,13 @@ const authController = {
             return res.status(400).json({ error: 'Captcha verification required' });
         }
 
+        if (!RECAPTCHA_SECRET_KEY) {
+            return res.status(503).json({ error: 'Captcha verification is unavailable. Please contact support.' });
+        }
+
         try {
-            const axios = require('axios');
             const verificationUrl = 'https://www.google.com/recaptcha/api/siteverify';
-            const verificationResponse = await axios.post(verificationUrl, 
+            const verificationResponse = await axios.post(verificationUrl,
                 null,
                 {
                     params: {

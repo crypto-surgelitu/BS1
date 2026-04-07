@@ -55,7 +55,11 @@ CREATE TABLE IF NOT EXISTS bookings (
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     type ENUM('booking', 'reservation') DEFAULT 'booking',
-    status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'pending',
+    status ENUM('pending', 'confirmed', 'rejected', 'cancelled') DEFAULT 'pending',
+    notes TEXT,
+    category ENUM('meeting', 'event', 'training', 'co-working', 'other') DEFAULT 'meeting',
+    required_amenities JSON DEFAULT NULL,
+    preferred_amenities JSON DEFAULT NULL,
     cancellation_reason VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -65,7 +69,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     INDEX idx_user_id (user_id),
     INDEX idx_room_id (room_id),
     INDEX idx_status (status),
-    UNIQUE KEY unique_booking (room_id, booking_date, start_time, end_time)
+    INDEX idx_booking_slot (room_id, booking_date, start_time, end_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Create reviews table
@@ -85,25 +89,26 @@ CREATE TABLE IF NOT EXISTS reviews (
     INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Insert default admin user (password: admin123)
--- Note: This is a hashed version of 'admin123' using bcrypt
-INSERT INTO users (email, password_hash, full_name, department, role) 
+-- Insert default admin user (password: admin@123)
+INSERT INTO users (email, password_hash, full_name, department, role, email_verified) 
 VALUES (
-    'admin@swahilipothub.co.ke', 
-    '$2b$10$MeRBMJH2l/L5Fe8DInQ2t.U.4ZLq5AVxc1YIc5yvMh/OqP3uMJVhS',
+    'admin@swahilipot.co.ke',
+    '$2b$10$SGfbF3Q2iFP6dIHQUXbXy.2RDjAd0T6CpRAvJvzNZMcE7LCWBAD3S',
     'Admin User',
     'Administration',
-    'admin'
+    'admin',
+    TRUE
 ) ON DUPLICATE KEY UPDATE email=email;
 
--- Insert default superadmin user (password: superadmin123)
-INSERT INTO users (email, password_hash, full_name, department, role) 
+-- Insert default superadmin user (password: superadmin@123)
+INSERT INTO users (email, password_hash, full_name, department, role, email_verified) 
 VALUES (
-    'superadmin@bs1.com', 
-    '$2b$10$FuW/mbXzrfVwjQXzKuNOn/2vuM2YDtpkHz4BS0hOjvQtPyXn',
+    'superadmin@bs1.com',
+    '$2b$10$orQiD3dYeO5l42WYGGBBb.AYYbbQ2MDlXria61ZsHKSXq3QbKnxK6',
     'Super Admin',
     'Administration',
-    'super_admin'
+    'super_admin',
+    TRUE
 ) ON DUPLICATE KEY UPDATE email=email;
 
 -- Create system_settings table (needed for working hours during login)

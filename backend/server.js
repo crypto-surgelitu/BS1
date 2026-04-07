@@ -10,7 +10,7 @@ const startReminderCron = require('./cron/reminderCron');
 const startWorkingHoursCron = require('./cron/workingHoursCron');
 const { apiLimiter } = require('./middleware/rateLimiter');
 const { sanitizeInput, customSanitize, validateContentType, validateRequestSize } = require('./middleware/sanitization');
-const { getCsrfToken, setCsrfToken } = require('./middleware/csrf');
+const { getCsrfToken, setCsrfToken, validateCsrf } = require('./middleware/csrf');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 const sessionManager = require('./services/sessionManager');
 
@@ -28,7 +28,7 @@ const server = http.createServer(app);
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-    : ['http://localhost:5173', 'http://localhost:3000'];
+    : ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000', 'http://127.0.0.1:3000'];
 
 const io = new Server(server, {
     cors: {
@@ -91,6 +91,12 @@ app.use((req, res, next) => {
     req.io = io;
     next();
 });
+
+app.get('/csrf-token', getCsrfToken);
+app.get('/api/csrf-token', getCsrfToken);
+
+// Enforce CSRF on all mutating requests after exposing the token endpoint.
+app.use(validateCsrf);
 
 app.get('/health', async (req, res) => {
     try {

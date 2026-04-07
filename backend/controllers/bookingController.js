@@ -3,6 +3,7 @@ const RoomModel = require('../models/roomModel');
 const UserModel = require('../models/userModel');
 const SettingsModel = require('../models/settingsModel');
 const mailerService = require('../services/mailerService');
+const { DEFAULT_ADMIN } = require('../config/systemAccounts');
 
 const formatDateDisplay = (dateStr) => {
     const date = new Date(dateStr + 'T00:00:00');
@@ -145,7 +146,7 @@ const bookingController = {
             const datesText = dateList.map(d => formatDateDisplay(d)).join('\n');
 
             // Send email to admin
-            const adminEmail = process.env.ADMIN_EMAIL;
+            const adminEmail = process.env.ADMIN_EMAIL || DEFAULT_ADMIN.email;
             if (adminEmail) {
                 mailerService.sendMail(
                     adminEmail,
@@ -397,7 +398,7 @@ const bookingController = {
 
             console.log(`✅ Booking #${id} cancelled by user ${req.user.id}`);
 
-            const adminEmail = process.env.ADMIN_EMAIL;
+            const adminEmail = process.env.ADMIN_EMAIL || DEFAULT_ADMIN.email;
             if (adminEmail) {
                 mailerService.sendMail(
                     adminEmail,

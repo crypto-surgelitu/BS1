@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle, RotateCcw } from 'lucide-react';
 import authService from '../services/authService';
 
-const RECAPTCHA_SITE_KEY = '6Ld9vHAsAAAAALZLg1TvrkYJCA9WiPkNU2Ml_s83';
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
 
 const ForgotPassword = () => {
     const navigate = useNavigate();
@@ -16,6 +16,11 @@ const ForgotPassword = () => {
     const widgetId = useRef(null);
 
     useEffect(() => {
+        if (!RECAPTCHA_SITE_KEY) {
+            setError('Captcha is not configured. Please set VITE_RECAPTCHA_SITE_KEY.');
+            return;
+        }
+
         const loadRecaptcha = () => {
             if (window.grecaptcha && window.grecaptcha.render) {
                 setRecaptchaReady(true);
@@ -72,6 +77,11 @@ const ForgotPassword = () => {
             }
         } catch (err) {
             console.error('Captcha error:', err);
+        }
+
+        if (!RECAPTCHA_SITE_KEY) {
+            setError('Captcha is not configured. Please set VITE_RECAPTCHA_SITE_KEY.');
+            return;
         }
         
         if (!captchaToken) {

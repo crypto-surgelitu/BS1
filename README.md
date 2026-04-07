@@ -243,12 +243,12 @@ npm start     # Production
 
 The backend API will be available at `http://localhost:3000`.
 
-### Default Admin Account
+### Default Admin Accounts
 
 After running the seed script or setup, you can login with:
 
-- Email: admin@swahilipothub.com
-- Password: (as set in seed.sql or setup)
+- Admin: `admin@swahilipot.co.ke` / `admin@123`
+- Superadmin: `superadmin@bs1.com` / `superadmin@123`
 
 **Important**: Change the default password after first login.
 

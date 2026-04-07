@@ -4,7 +4,7 @@ import { Shield, Mail, Lock, User } from 'lucide-react';
 import authService from '../services/authService';
 import spfLogo from '../assets/sph-logo (1).png';
 
-const RECAPTCHA_SITE_KEY = '6Ld9vHAsAAAAALZLg1TvrkYJCA9WiPkNU2Ml_s83';
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
 
 const AdminLogin = () => {
     const navigate = useNavigate();
@@ -20,6 +20,11 @@ const AdminLogin = () => {
     const widgetId = useRef(null);
 
     useEffect(() => {
+        if (!RECAPTCHA_SITE_KEY) {
+            setError('Captcha is not configured. Please set VITE_RECAPTCHA_SITE_KEY.');
+            return;
+        }
+
         const loadRecaptcha = () => {
             if (window.grecaptcha && window.grecaptcha.render) {
                 setRecaptchaReady(true);
@@ -80,7 +85,12 @@ const AdminLogin = () => {
         } catch (err) {
             console.error('Captcha error:', err);
         }
-        
+
+        if (!RECAPTCHA_SITE_KEY) {
+            setError('Captcha is not configured. Please set VITE_RECAPTCHA_SITE_KEY.');
+            return;
+        }
+
         if (!captchaToken) {
             setError('Please complete the captcha verification.');
             return;
@@ -93,6 +103,11 @@ const AdminLogin = () => {
             const response = await authService.adminLogin(formData.email, formData.password, captchaToken);
 
             if (response.success) {
+                if (response.require2fa || response.requirePasswordResetOtp) {
+                    setError('This admin account requires extra verification. Use the main login flow to complete sign-in.');
+                    return;
+                }
+
                 const data = response.data;
                 if (data.user.role === 'super_admin' || data.user.role === 'admin') {
                     // User data already stored by authService
@@ -154,7 +169,7 @@ const AdminLogin = () => {
                                 value={formData.email}
                                 onChange={handleChange}
                                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 bg-gray-50 text-gray-900 placeholder-gray-400"
-                                placeholder="admin@swahilipot.com"
+                                placeholder="admin@swahilipot.co.ke"
                                 required
                             />
                         </div>

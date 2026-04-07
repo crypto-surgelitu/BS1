@@ -5,12 +5,12 @@
 
 const mysql = require('mysql2/promise');
 require('dotenv').config({ path: __dirname + '/../.env' });
+const { DEFAULT_ADMIN, DEFAULT_SUPERADMIN } = require('../config/systemAccounts');
 
 async function repairDatabase() {
     let connection;
-    
+
     try {
-        // Connect to database
         connection = await mysql.createConnection({
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
@@ -18,22 +18,20 @@ async function repairDatabase() {
             database: process.env.DB_NAME
         });
 
-        console.log('✅ Connected to database\n');
+        console.log('Connected to database\n');
 
-        // Drop existing tables
         console.log('0. Dropping existing tables...');
         const tables = ['users', 'rooms', 'bookings', 'reviews', 'system_settings'];
         for (const table of tables) {
             try {
                 await connection.query(`DROP TABLE IF EXISTS ${table}`);
-                console.log(`   ✅ Dropped: ${table}`);
+                console.log(`   Dropped: ${table}`);
             } catch (err) {
-                console.log(`   ⚠️ ${table}: ${err.message}`);
+                console.log(`   ${table}: ${err.message}`);
             }
         }
         console.log('');
 
-        // Create users table
         console.log('1. Creating users table...');
         await connection.query(`
             CREATE TABLE users (
@@ -61,9 +59,8 @@ async function repairDatabase() {
                 INDEX idx_role (role)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
-        console.log('   ✅ users table created\n');
+        console.log('   users table created\n');
 
-        // Create rooms table
         console.log('2. Creating rooms table...');
         await connection.query(`
             CREATE TABLE rooms (
@@ -79,9 +76,8 @@ async function repairDatabase() {
                 INDEX idx_capacity (capacity)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
-        console.log('   ✅ rooms table created\n');
+        console.log('   rooms table created\n');
 
-        // Create bookings table
         console.log('3. Creating bookings table...');
         await connection.query(`
             CREATE TABLE bookings (
@@ -92,7 +88,11 @@ async function repairDatabase() {
                 start_time TIME NOT NULL,
                 end_time TIME NOT NULL,
                 type ENUM('booking', 'reservation') DEFAULT 'booking',
-                status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'pending',
+                status ENUM('pending', 'confirmed', 'rejected', 'cancelled') DEFAULT 'pending',
+                notes TEXT,
+                category ENUM('meeting', 'event', 'training', 'co-working', 'other') DEFAULT 'meeting',
+                required_amenities JSON DEFAULT NULL,
+                preferred_amenities JSON DEFAULT NULL,
                 cancellation_reason VARCHAR(500),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -100,12 +100,11 @@ async function repairDatabase() {
                 INDEX idx_user_id (user_id),
                 INDEX idx_room_id (room_id),
                 INDEX idx_status (status),
-                UNIQUE KEY unique_booking (room_id, booking_date, start_time, end_time)
+                INDEX idx_booking_slot (room_id, booking_date, start_time, end_time)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
-        console.log('   ✅ bookings table created\n');
+        console.log('   bookings table created\n');
 
-        // Create reviews table
         console.log('4. Creating reviews table...');
         await connection.query(`
             CREATE TABLE reviews (
@@ -122,9 +121,8 @@ async function repairDatabase() {
                 INDEX idx_status (status)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
-        console.log('   ✅ reviews table created\n');
+        console.log('   reviews table created\n');
 
-        // Create system_settings table
         console.log('5. Creating system_settings table...');
         await connection.query(`
             CREATE TABLE system_settings (
@@ -137,25 +135,22 @@ async function repairDatabase() {
                 INDEX idx_setting_key (setting_key)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
-        console.log('   ✅ system_settings table created\n');
+        console.log('   system_settings table created\n');
 
-        // Insert default admin user
         console.log('6. Inserting default admin user...');
-        await connection.query(`
-            INSERT INTO users (email, password_hash, full_name, department, role) 
-            VALUES ('admin@swahilipothub.co.ke', '$2b$10$FuW/mbXzrfVwjQXzKuNOn/2vuM2YDtpkHz4BS0hOjvQtPyXn', 'Admin User', 'Administration', 'admin')
-        `);
-        console.log('   ✅ Admin user created (password: admin123)\n');
+        await connection.query(
+            'INSERT INTO users (email, password_hash, full_name, department, role, email_verified) VALUES (?, ?, ?, ?, ?, ?)',
+            [DEFAULT_ADMIN.email, DEFAULT_ADMIN.passwordHash, DEFAULT_ADMIN.fullName, DEFAULT_ADMIN.department, DEFAULT_ADMIN.role, true]
+        );
+        console.log('   Admin user created (email: admin@swahilipot.co.ke, password: admin@123)\n');
 
-        // Insert default superadmin user
         console.log('6b. Inserting default superadmin user...');
-        await connection.query(`
-            INSERT INTO users (email, password_hash, full_name, department, role) 
-            VALUES ('superadmin@bs1.com', '$2b$10$FuW/mbXzrfVwjQXzKuNOn/2vuM2YDtpkHz4BS0hOjvQtPyXn', 'Super Admin', 'Administration', 'super_admin')
-        `);
-        console.log('   ✅ Superadmin user created (password: superadmin123)\n');
+        await connection.query(
+            'INSERT INTO users (email, password_hash, full_name, department, role, email_verified) VALUES (?, ?, ?, ?, ?, ?)',
+            [DEFAULT_SUPERADMIN.email, DEFAULT_SUPERADMIN.passwordHash, DEFAULT_SUPERADMIN.fullName, DEFAULT_SUPERADMIN.department, DEFAULT_SUPERADMIN.role, true]
+        );
+        console.log('   Superadmin user created (email: superadmin@bs1.com, password: superadmin@123)\n');
 
-        // Insert default system settings
         console.log('7. Inserting default system settings...');
         await connection.query(`
             INSERT INTO system_settings (setting_key, setting_value, description) VALUES
@@ -166,15 +161,13 @@ async function repairDatabase() {
             ('max_booking_days_ahead', '30', 'Maximum days in advance for bookings'),
             ('enable_multi_date_reservation', 'true', 'Allow multi-date reservations')
         `);
-        console.log('   ✅ System settings inserted\n');
+        console.log('   System settings inserted\n');
 
-        // Verify tables
         console.log('8. Verifying tables...');
         const [tableList] = await connection.query('SHOW TABLES');
         console.log('   Created tables:', tableList.length);
-        for (const t of tableList) {
-            const tableName = Object.values(t)[0];
-            console.log(`   - ${tableName}`);
+        for (const table of tableList) {
+            console.log(`   - ${Object.values(table)[0]}`);
         }
 
         console.log('\n========================================');
@@ -182,14 +175,13 @@ async function repairDatabase() {
         console.log('========================================\n');
         console.log('The login endpoint should now work correctly.');
         console.log('\nDefault admin login:');
-        console.log('  Email: admin@swahilipothub.co.ke');
-        console.log('  Password: admin123');
+        console.log('  Email: admin@swahilipot.co.ke');
+        console.log('  Password: admin@123');
         console.log('\nDefault superadmin login:');
         console.log('  Email: superadmin@bs1.com');
-        console.log('  Password: superadmin123');
-
+        console.log('  Password: superadmin@123');
     } catch (error) {
-        console.error('❌ Database repair failed:', error.message);
+        console.error('Database repair failed:', error.message);
     } finally {
         if (connection) {
             await connection.end();
