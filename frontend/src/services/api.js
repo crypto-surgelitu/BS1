@@ -81,10 +81,13 @@ const refreshAccessToken = async () => {
     }
 
     try {
+        const csrfToken = await ensureCsrfToken();
         const response = await fetch(`${API_BASE_URL}/refresh-token`, {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
+                ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
             },
             body: JSON.stringify({ refreshToken }),
         });

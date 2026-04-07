@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Calendar as CalendarIcon, Clock, ChevronDown, ChevronLeft, ChevronRight, AlertCircle, Users, Star } from 'lucide-react';
 import bookingService from '../../services/bookingService';
 import preferencesService from '../../services/preferencesService';
+import reviewService from '../../services/reviewService';
 import ReviewPopup from '../ReviewPopup';
 
 const AVAILABLE_AMENITIES = [
@@ -38,6 +39,7 @@ const [requiredAmenities, setRequiredAmenities] = useState([]);
 const [preferredAmenities, setPreferredAmenities] = useState([]);
 const [showReview, setShowReview] = useState(false);
 const [bookedRoom, setBookedRoom] = useState(null);
+const [bookedBookingId, setBookedBookingId] = useState(null);
 const dragModeRef = useRef(null);
 const calendarRef = useRef(null);
 
@@ -59,6 +61,7 @@ useEffect(() => {
         setShowAmenities(false);
         setShowReview(false);
         setBookedRoom(null);
+        setBookedBookingId(null);
         fetchUserPreferences();
     }
 }, [isOpen]);
@@ -243,6 +246,7 @@ const handleSubmit = async (e) => {
             } else {
                 setSuccess(true);
                 setBookedRoom(room?.name || 'the room');
+                setBookedBookingId(data.booking?.ids?.[0] || null);
                 setShowReview(true);
                 setTimeout(() => {
                     onClose();
@@ -329,11 +333,16 @@ if (!isOpen) return (
             isOpen={showReview}
             onClose={() => setShowReview(false)}
             onSubmit={async ({ rating, label }) => {
-                await fetch("http://localhost:3000/api/public-reviews", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ rating, label, roomName: bookedRoom }),
+                const response = await reviewService.createReview({
+                    bookingId: bookedBookingId,
+                    rating,
+                    comment: `${label} experience for ${bookedRoom || 'room booking'}`
                 });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'Failed to submit review');
+                }
             }}
             actionLabel={`booking ${bookedRoom || "the room"}`}
         />

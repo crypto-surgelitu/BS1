@@ -18,6 +18,8 @@ export default function ReviewPopup({ isOpen, onClose, onSubmit, actionLabel = "
   const [hovered, setHovered] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (isOpen) {
@@ -28,6 +30,8 @@ export default function ReviewPopup({ isOpen, onClose, onSubmit, actionLabel = "
         setRating(0);
         setHovered(0);
         setSubmitted(false);
+        setSubmitting(false);
+        setError("");
       }, 300);
     }
   }, [isOpen]);
@@ -35,11 +39,20 @@ export default function ReviewPopup({ isOpen, onClose, onSubmit, actionLabel = "
   const labels = ["", "Poor", "Fair", "Good", "Great", "Excellent"];
   const colors = ["", "#ef4444", "#f97316", "#eab308", "#84cc16", "#22c55e"];
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!rating) return;
-    onSubmit?.({ rating, label: labels[rating] });
-    setSubmitted(true);
-    setTimeout(() => onClose?.(), 1800);
+    setSubmitting(true);
+    setError("");
+
+    try {
+      await onSubmit?.({ rating, label: labels[rating] });
+      setSubmitted(true);
+      setTimeout(() => onClose?.(), 1800);
+    } catch (submitError) {
+      setError(submitError?.message || "Failed to submit review");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -109,15 +122,21 @@ export default function ReviewPopup({ isOpen, onClose, onSubmit, actionLabel = "
               {labels[hovered || rating]}
             </p>
 
-            <button onClick={handleSubmit} disabled={!rating}
+            {error ? (
+              <p style={{ color: "#fca5a5", fontSize: "0.8rem", textAlign: "center", margin: "0 0 1rem" }}>
+                {error}
+              </p>
+            ) : null}
+
+            <button onClick={handleSubmit} disabled={!rating || submitting}
               style={{
                 width: "100%", padding: "0.7rem", borderRadius: "0.65rem", border: "none",
                 background: rating ? colors[rating] : "rgba(255,255,255,0.07)",
                 color: rating ? "#000" : "rgba(255,255,255,0.25)",
-                fontWeight: 600, fontSize: "0.9rem", cursor: rating ? "pointer" : "not-allowed",
+                fontWeight: 600, fontSize: "0.9rem", cursor: rating && !submitting ? "pointer" : "not-allowed",
                 transition: "all 0.2s ease", fontFamily: "inherit",
               }}>
-              Submit Review
+              {submitting ? "Submitting..." : "Submit Review"}
             </button>
 
             <button onClick={onClose}

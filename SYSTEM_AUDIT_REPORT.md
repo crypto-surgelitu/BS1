@@ -147,6 +147,56 @@ Date: 2026-04-07
   - [AdminLogin.jsx](/C:/Users/ANTONY/Documents/BS1/frontend/src/pages/AdminLogin.jsx)
 - Status: Fixed
 
+### 10. Post-booking quick review flow was broken
+
+- Issue:
+  The booking modal posted reviews with a hardcoded raw `fetch` to `/api/public-reviews`, bypassing the shared API client and the new CSRF handling.
+- Impact:
+  Quick review submission would fail after the security fixes, and it was also tied to a brittle endpoint design.
+- Solution:
+  Updated:
+  - [BookingModal.jsx](/C:/Users/ANTONY/Documents/BS1/frontend/src/components/modals/BookingModal.jsx)
+  - [ReviewPopup.jsx](/C:/Users/ANTONY/Documents/BS1/frontend/src/components/ReviewPopup.jsx)
+  - [publicReviews.js](/C:/Users/ANTONY/Documents/BS1/backend/routes/publicReviews.js)
+- Status: Fixed
+
+### 11. Review popup ignored async submission failures
+
+- Issue:
+  The popup marked reviews as submitted without waiting for the server response.
+- Impact:
+  Users could see a success state even when the review API failed.
+- Solution:
+  Added awaited submission, loading state, and inline error handling in [ReviewPopup.jsx](/C:/Users/ANTONY/Documents/BS1/frontend/src/components/ReviewPopup.jsx).
+- Status: Fixed
+
+### 12. Diagnostic login pages were outdated after CSRF enforcement
+
+- Issue:
+  The test login pages still posted directly to `/login` without first getting a CSRF token or including credentials.
+- Impact:
+  The diagnostic pages would report false login failures.
+- Solution:
+  Updated:
+  - [backend/test-login.html](/C:/Users/ANTONY/Documents/BS1/backend/test-login.html)
+  - [frontend/public/test-login.html](/C:/Users/ANTONY/Documents/BS1/frontend/public/test-login.html)
+- Status: Fixed
+
+### 13. Endpoint smoke test script no longer matched the secured API
+
+- Issue:
+  The old `testEndpoint.js` tried to update booking status without authentication or CSRF.
+- Impact:
+  The script was no longer a valid diagnostic after the security changes.
+- Solution:
+  Replaced it with a smoke script that:
+  - checks `/health`
+  - optionally performs an authenticated + CSRF-protected booking update when `TEST_ACCESS_TOKEN` is provided
+
+  File:
+  - [testEndpoint.js](/C:/Users/ANTONY/Documents/BS1/backend/testEndpoint.js)
+- Status: Fixed
+
 ## Remaining Blocker
 
 ### Live database was unavailable during the audit

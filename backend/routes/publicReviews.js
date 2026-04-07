@@ -1,26 +1,31 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { dbPromise } = require("../config/db");
+const ReviewModel = require('../models/reviewModel');
+const { authenticate } = require('../middleware/auth');
 
-router.post("/", async (req, res) => {
-    const { rating, label, roomName } = req.body;
-    
+// Kept for backward compatibility with the lightweight booking-review popup.
+router.post('/', authenticate, async (req, res) => {
+    const { rating, label, comment, bookingId } = req.body;
+    const userId = req.user.id;
+    const reviewComment = comment || label;
+
     if (!rating || rating < 1 || rating > 5) {
-        return res.status(400).json({ error: "Rating must be between 1 and 5" });
+        return res.status(400).json({ error: 'Rating must be between 1 and 5' });
     }
-    if (!label || !roomName) {
-        return res.status(400).json({ error: "Label and room name are required" });
+
+    if (!reviewComment) {
+        return res.status(400).json({ error: 'Review comment is required' });
     }
-    
+
     try {
-        await dbPromise.query(
-            "INSERT INTO reviews (rating, comment, room_name, status, created_at) VALUES (?, ?, ?, ?, NOW())",
-            [rating, label, roomName, "published"]
-        );
-        res.json({ success: true });
+        const result = await ReviewModel.create(userId, bookingId || null, rating, reviewComment, {
+            quickReview: true
+        });
+
+        res.status(201).json({ success: true, reviewId: result.insertId });
     } catch (err) {
-        console.error("Error creating public review:", err);
-        res.status(500).json({ error: err.message });
+        console.error('Error creating quick review:', err);
+        res.status(500).json({ error: 'Failed to create review' });
     }
 });
 
