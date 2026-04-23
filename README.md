@@ -19,28 +19,35 @@ This solution is ideal for meetings, creative sessions, training, co-working, an
 
 - View Availability: Browse available rooms looking for suitable slots.
 - Easy Booking: Book rooms by selecting date and time.
+- Multi-Date Booking: Book multiple dates in one request.
 - Notifications: Receive booking confirmations via email.
 - Manage Bookings: Cancel or update bookings (within policy guidelines).
-- Room Reviews: Leave reviews and ratings for rooms.
 - FAQ: Access frequently asked questions.
+- Chat Assistant: AI-powered chatbot for support.
 - Preferences: Customize notification and booking preferences.
 - Two-Factor Authentication: Secure login with TOTP.
+- Password Reset OTP: Reset password via email OTP.
+- Session Management: View and manage active sessions.
 
 ### Admin Features
 
 - Room Management: Add, edit, or remove rooms.
 - Configuration: Set room capacity, amenities, and specific rules.
-- Workflow Control: Approve or reject booking requests.
-- Insights: View booking history and analytics.
+- Booking Management: Approve, reject, or cancel bookings.
+- Real-time Dashboard: Live view of room status and bookings.
 - User Management: Manage users and roles.
 - FAQ Management: Create and manage FAQs.
-- Reviews Management: Moderate room reviews.
+- Analytics: View booking trends and statistics.
 
 ### Super Admin Features
 
 - System-wide administration
 - User role management (super_admin, admin, user)
 - System settings and configuration
+- Audit logs: Track system changes and activities
+- Working hours configuration
+- Multi-date reservation settings
+- Maintenance mode toggle
 
 ## Room Information
 
@@ -52,7 +59,6 @@ Each room listing in the system includes:
 - Booking Price (if applicable)
 - Availability Schedule
 - Location/Floor
-- User Reviews & Ratings
 
 ## System Workflow
 
@@ -119,15 +125,16 @@ BS1/
 
 ## Technology Stack
 
-- **Frontend**: React, Vite
-- **Styling**: Tailwind CSS
+- **Frontend**: React 19, Vite 7
+- **Styling**: Tailwind CSS 4
 - **Backend**: Node.js, Express
 - **Database**: MySQL (mysql2 driver)
 - **Authentication**: JWT, Bcrypt, TOTP (Two-Factor)
-- **Real-time**: Socket.IO
+- **Real-time**: Socket.IO for live updates
 - **Security**: Helmet, CORS, CSRF protection, Rate limiting, Input sanitization
-- **Email**: Nodemailer
-- **Scheduled Jobs**: node-cron
+- **Email**: Nodemailer with Gmail SMTP
+- **Scheduled Jobs**: node-cron for reminders and working hours
+- **QR Codes**: Check-in via QR code scanning
 
 ## Security Features
 
@@ -247,7 +254,7 @@ The backend API will be available at `http://localhost:3000`.
 
 After running the seed script or setup, you can login with:
 
-- Admin: `admin@swahilipot.co.ke` / `admin@123`
+- Admin: `admin@swahilipothub.co.ke` / `admin@123`
 - Superadmin: `superadmin@bs1.com` / `superadmin@123`
 
 **Important**: Change the default password after first login.

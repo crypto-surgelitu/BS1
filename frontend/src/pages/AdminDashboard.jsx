@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Edit, LogOut, LayoutGrid, Building2, Users, Clock, Monitor, XCircle, Star } from 'lucide-react';
+import { Plus, Trash2, Edit, LogOut, LayoutGrid, Building2, Users, Clock, Monitor, XCircle } from 'lucide-react';
 import AddRoomModal from '../components/modals/AddRoomModal';
 import Footer from '../components/layout/Footer';
 import roomService from '../services/roomService';
@@ -267,16 +267,9 @@ const AdminDashboard = () => {
                             className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'users' ? 'bg-red-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
                         >
                             <Users className="w-4 h-4 mr-2" />
-                            Active Users
+Active Users
                             <span className={`ml-2 w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-300'}`} title={isConnected ? 'Real-time connected' : 'Reconnecting...'}>
                             </span>
-                        </button>
-                        <button
-                            onClick={() => navigate('/admin/reviews')}
-                            className="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-600 hover:bg-gray-50"
-                        >
-                            <Star className="w-4 h-4 mr-2" />
-                            Reviews
                         </button>
                     </div>
 
