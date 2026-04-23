@@ -33,12 +33,8 @@ router.post('/login',
     authController.login
 );
 
-// POST /admin/login - Admin login (reCAPTCHA optional for now)
+// POST /admin/login - Admin login (removed captcha)
 router.post('/admin/login',
-    adminAuthLimiter,
-    [body('captchaToken').notEmpty().withMessage('Captcha verification is required')],
-    handleValidationErrors,
-    verifyRecaptcha,
     authController.adminLogin
 );
 

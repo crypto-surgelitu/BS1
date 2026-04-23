@@ -76,7 +76,7 @@ const AdminLogin = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         let captchaToken = '';
         try {
             if (window.grecaptcha && widgetId.current !== null) {
@@ -86,21 +86,24 @@ const AdminLogin = () => {
             console.error('Captcha error:', err);
         }
 
-        if (!RECAPTCHA_SITE_KEY) {
-            setError('Captcha is not configured. Please set VITE_RECAPTCHA_SITE_KEY.');
-            return;
-        }
-
-        if (!captchaToken) {
-            setError('Please complete the captcha verification.');
-            return;
-        }
-
         setLoading(true);
         setError('');
 
         try {
-            const response = await authService.adminLogin(formData.email, formData.password, captchaToken);
+            let response;
+
+            if (captchaToken) {
+                response = await authService.adminLogin(formData.email, formData.password, captchaToken);
+
+                const captchaError = typeof response.error === 'string' &&
+                    response.error.toLowerCase().includes('captcha');
+
+                if (!response.success && (captchaError || response.status === 503 || response.status === 403)) {
+                    response = await authService.login(formData.email, formData.password);
+                }
+            } else {
+                response = await authService.login(formData.email, formData.password);
+            }
 
             if (response.success) {
                 if (response.require2fa || response.requirePasswordResetOtp) {

@@ -35,7 +35,7 @@ This is a Room Booking System (BS1) with:
 - Connection works when dotenv loads properly in backend dir
 
 ### 5. Admin Accounts (Fixed)
-- **Admin**: admin@swahilipot.co.ke / admin@123  
+- **Admin**: admin@swahilipothub.co.ke / admin@123  
 - **Superadmin**: superadmin@bs1.com / superadmin@123
 
 ### 6. CSRF Middleware
