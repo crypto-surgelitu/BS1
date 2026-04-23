@@ -4,6 +4,7 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import preferencesService from '../services/preferencesService';
 import roomService from '../services/roomService';
+import bgImage from '../assets/images/backgrounds/bg5.jpg';
 
 const AVAILABLE_AMENITIES = [
     'WiFi',
@@ -110,7 +111,15 @@ const PreferencesPage = () => {
     }
 
     return (
-        <div className="min-h-screen flex flex-col bg-gray-50">
+        <div 
+            className="min-h-screen flex flex-col"
+            style={{ 
+                backgroundImage: `linear-gradient(rgba(249, 250, 251, 0.8), rgba(249, 250, 251, 0.8)), url(${bgImage})`, 
+                backgroundSize: 'cover', 
+                backgroundPosition: 'center', 
+                backgroundAttachment: 'fixed' 
+            }}
+        >
             <Navbar />
             
             <main className="flex-1 py-8 px-4">

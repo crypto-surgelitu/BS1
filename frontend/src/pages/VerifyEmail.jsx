@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Mail, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import authService from '../services/authService';
+import bgImage from '../assets/images/backgrounds/bg3.jpg';
 
 const VerifyEmail = () => {
     const [searchParams] = useSearchParams();
@@ -52,7 +53,7 @@ const VerifyEmail = () => {
 
     if (status === 'verifying') {
         return (
-            <div className="auth-container">
+            <div className="auth-container" style={{ backgroundImage: `linear-gradient(rgba(239, 246, 255, 0.8), rgba(239, 246, 255, 0.8)), url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
                 <div className="auth-card">
                     <div className="auth-icon spinning">
                         <Mail size={40} />
@@ -66,7 +67,7 @@ const VerifyEmail = () => {
 
     if (status === 'success') {
         return (
-            <div className="auth-container">
+            <div className="auth-container" style={{ backgroundImage: `linear-gradient(rgba(239, 246, 255, 0.8), rgba(239, 246, 255, 0.8)), url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
                 <div className="auth-card">
                     <div className="auth-success-icon">
                         <CheckCircle size={48} color="#16a34a" />
@@ -82,7 +83,7 @@ const VerifyEmail = () => {
     }
 
     return (
-        <div className="auth-container">
+        <div className="auth-container" style={{ backgroundImage: `linear-gradient(rgba(239, 246, 255, 0.8), rgba(239, 246, 255, 0.8)), url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
             <div className="auth-card">
                 <div className="auth-success-icon">
                     <XCircle size={48} color="#dc2626" />

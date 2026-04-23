@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { LogOut, Building2, Menu } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
-import spfLogo from '../assets/sph-logo (1).png';
+import spfLogo from '../assets/brand/swahilipot-logo.png';
 
 const Navbar = ({ onMenuClick }) => {
     const navigate = useNavigate();

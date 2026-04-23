@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Building2, User, Eye, EyeOff } from 'lucide-react';
 import authService from '../services/authService';
-import spfLogo from '../assets/sph-logo (1).png';
+import logo from '../assets/brand/swahilipot-logo.png';
+import authIllustration from '../assets/ui/auth-illustration.webp';
+
+import bgImage from '../assets/images/backgrounds/bg1.jpg';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -114,13 +117,21 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div 
+            className="min-h-screen flex items-center justify-center p-4"
+            style={{ 
+                backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${bgImage})`, 
+                backgroundSize: 'cover', 
+                backgroundPosition: 'center', 
+                backgroundAttachment: 'fixed' 
+            }}
+        >
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
                 <div className="flex flex-col items-center mb-8">
                     <img 
-                        src={spfLogo} 
+                        src={logo} 
                         alt="Swahilipot Hub" 
-                        className="w-24 h-24 mb-2 object-contain"
+                        className="h-12 w-auto mb-2"
                     />
                     <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
                         Welcome Back

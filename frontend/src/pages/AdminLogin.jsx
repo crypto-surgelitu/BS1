@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Mail, Lock, User } from 'lucide-react';
 import authService from '../services/authService';
-import spfLogo from '../assets/sph-logo (1).png';
+import spfLogo from '../assets/brand/swahilipot-logo.png';
 
 const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
 

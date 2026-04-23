@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { LogOut, Building2, Menu, Settings } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
-import spfLogo from '../../assets/sph-logo (1).png';
+import logo from '../../assets/brand/swahilipot-logo.png';
 
 const Navbar = ({ onMenuClick }) => {
     const navigate = useNavigate();
@@ -50,9 +50,9 @@ const Navbar = ({ onMenuClick }) => {
                                 className="flex items-center hover:opacity-90 transition-opacity"
                             >
                                 <img 
-                                    src={spfLogo} 
-                                    alt="SPF Logo" 
-                                    className="w-14 h-14 mr-3 object-contain"
+                                    src={logo} 
+                                    alt="Swahilipot Hub" 
+                                    className="h-8 w-auto mr-3"
                                 />
                                 <div>
                                     <h1 className="text-xl font-extrabold text-gray-900 leading-none tracking-tight"> Swahilipot Hub BS1 </h1>

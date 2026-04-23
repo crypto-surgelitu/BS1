@@ -1,0 +1,9 @@
+
+> backend@1.0.0 start
+> node server.js
+
+[dotenv@17.2.3] injecting env (22) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+✅ Working hours enforcement cron started
+🚀 Server running on port 3002
+📍 Frontend URL: http://localhost:5173
+✅ Database connected (Pool: 5)

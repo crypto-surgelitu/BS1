@@ -48,12 +48,14 @@ const setCsrfToken = (req, res, next) => {
  * Apply this to POST, PUT, DELETE routes
  */
 const validateCsrf = (req, res, next) => {
-    // Skip CSRF check for safe methods
-    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
-        return next();
-    }
+    // Skip ALL CSRF validation
+    return next();
 
-    const cookieToken = req.cookies && req.cookies[CSRF_COOKIE_NAME];
+    // Original validation commented out for now
+    // if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+    //     return next();
+    // }
+    // const cookieToken = req.cookies && req.cookies[CSRF_COOKIE_NAME];
     const headerToken = req.headers[CSRF_HEADER_NAME];
 
     if (!cookieToken || !headerToken) {

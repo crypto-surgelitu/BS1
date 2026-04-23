@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Building2, Building, Eye, EyeOff, Wand2 } from 'lucide-react';
 import authService from '../services/authService';
-import spfLogo from '../assets/sph-logo (1).png';
+import spfLogo from '../assets/brand/swahilipot-logo.png';
+import bgImage from '../assets/images/backgrounds/bg2.jpg';
 
 const Signup = () => {
     const navigate = useNavigate();
@@ -90,7 +91,15 @@ const Signup = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div 
+            className="min-h-screen flex items-center justify-center p-4"
+            style={{ 
+                backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${bgImage})`, 
+                backgroundSize: 'cover', 
+                backgroundPosition: 'center', 
+                backgroundAttachment: 'fixed' 
+            }}
+        >
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
                 <div className="flex flex-col items-center mb-8">
                     <img 

@@ -127,6 +127,13 @@ app.get('/migrate', (req, res) => {
     });
 });
 
+// DEBUG TEST ENDPOINT - Raw without any middleware
+app.post('/test-login', (req, res) => {
+    console.log('[DEBUG] /test-login body:', req.body);
+    const { email, password } = req.body || {};
+    res.json({ received: { email, password: password ? 'present' : 'missing' } });
+});
+
 app.use('/', authRoutes);
 app.use('/rooms', roomRoutes);
 app.use('/', bookingRoutes);

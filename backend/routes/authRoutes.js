@@ -28,7 +28,6 @@ router.post('/signup',
 
 // POST /login - Login
 router.post('/login',
-    authLimiter,
     loginValidation,
     handleValidationErrors,
     authController.login

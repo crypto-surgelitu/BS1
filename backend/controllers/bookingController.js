@@ -385,8 +385,10 @@ const bookingController = {
             }
 
             const booking = bookings[0];
+            const bookingUserId = Number(booking.user_id);
+            const currentUserId = Number(req.user?.id);
 
-            if (booking.user_id !== req.user.id) {
+            if (!Number.isInteger(bookingUserId) || !Number.isInteger(currentUserId) || bookingUserId !== currentUserId) {
                 return res.status(403).json({ error: 'You can only cancel your own bookings' });
             }
 

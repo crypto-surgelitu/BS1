@@ -1,6 +1,6 @@
 import React from 'react';
 import { Facebook, Twitter, Instagram, Linkedin, Youtube, Mail, Phone, MapPin } from 'lucide-react';
-import spfLogo from '../../assets/sph-logo (1).png';
+import spfLogo from '../../assets/brand/swahilipot-logo.png';
 
 const Footer = () => {
     return (

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Lock, CheckCircle, XCircle } from 'lucide-react';
 import authService from '../services/authService';
+import bgImage from '../assets/images/backgrounds/bg3.jpg';
 
 const ResetPassword = () => {
     const [searchParams] = useSearchParams();
@@ -53,7 +54,7 @@ const ResetPassword = () => {
 
     if (success) {
         return (
-            <div className="auth-container">
+            <div className="auth-container" style={{ backgroundImage: `linear-gradient(rgba(239, 246, 255, 0.8), rgba(239, 246, 255, 0.8)), url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
                 <div className="auth-card">
                     <div className="auth-success-icon">
                         <CheckCircle size={48} color="#16a34a" />
@@ -70,7 +71,7 @@ const ResetPassword = () => {
 
     if (!token) {
         return (
-            <div className="auth-container">
+            <div className="auth-container" style={{ backgroundImage: `linear-gradient(rgba(239, 246, 255, 0.8), rgba(239, 246, 255, 0.8)), url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
                 <div className="auth-card">
                     <div className="auth-success-icon">
                         <XCircle size={48} color="#dc2626" />
@@ -86,7 +87,7 @@ const ResetPassword = () => {
     }
 
     return (
-        <div className="auth-container">
+        <div className="auth-container" style={{ backgroundImage: `linear-gradient(rgba(239, 246, 255, 0.8), rgba(239, 246, 255, 0.8)), url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
             <div className="auth-card">
                 <div className="auth-icon">
                     <Lock size={40} />

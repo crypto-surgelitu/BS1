@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Lock, ArrowLeft, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import authService from '../services/authService';
+import bgImage from '../assets/images/backgrounds/bg3.jpg';
 
 const ResetPasswordPin = () => {
     const navigate = useNavigate();
@@ -86,7 +87,15 @@ const ResetPasswordPin = () => {
 
     if (success) {
         return (
-            <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
+            <div 
+                className="min-h-screen flex items-center justify-center p-4"
+                style={{ 
+                    backgroundImage: `linear-gradient(rgba(239, 246, 255, 0.8), rgba(239, 246, 255, 0.8)), url(${bgImage})`, 
+                    backgroundSize: 'cover', 
+                    backgroundPosition: 'center', 
+                    backgroundAttachment: 'fixed' 
+                }}
+            >
                 <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
                     <div className="flex flex-col items-center mb-6">
                         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
@@ -112,7 +121,15 @@ const ResetPasswordPin = () => {
     }
 
     return (
-        <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
+        <div 
+            className="min-h-screen flex items-center justify-center p-4"
+            style={{ 
+                backgroundImage: `linear-gradient(rgba(239, 246, 255, 0.8), rgba(239, 246, 255, 0.8)), url(${bgImage})`, 
+                backgroundSize: 'cover', 
+                backgroundPosition: 'center', 
+                backgroundAttachment: 'fixed' 
+            }}
+        >
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
                 <div className="flex flex-col items-center mb-6">
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">

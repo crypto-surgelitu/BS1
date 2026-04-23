@@ -6,6 +6,7 @@ import ReviewForm from '../components/reviews/ReviewForm';
 import ReviewCard from '../components/reviews/ReviewCard';
 import reviewService from '../services/reviewService';
 import { Star, Plus, MessageSquare } from 'lucide-react';
+import bgImage from '../assets/images/backgrounds/bg5.jpg';
 
 export default function MyReviews() {
     const navigate = useNavigate();
@@ -75,7 +76,15 @@ export default function MyReviews() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col bg-gray-50">
+        <div 
+            className="min-h-screen flex flex-col"
+            style={{ 
+                backgroundImage: `linear-gradient(rgba(249, 250, 251, 0.8), rgba(249, 250, 251, 0.8)), url(${bgImage})`, 
+                backgroundSize: 'cover', 
+                backgroundPosition: 'center', 
+                backgroundAttachment: 'fixed' 
+            }}
+        >
             <Navbar />
             
             <main className="flex-1 container mx-auto px-4 py-8">
