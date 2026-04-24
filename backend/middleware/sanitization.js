@@ -29,21 +29,21 @@ const sanitizeInput = (req, res, next) => {
  * Additional custom sanitization for common attack vectors
  */
 const customSanitize = (req, res, next) => {
-    // Remove null bytes and other dangerous characters from string inputs
-    const sanitizeStrings = (obj) => {
+    const sanitizeStrings = (obj, depth = 0) => {
+        if (depth > 10) return obj;
         if (typeof obj === 'string') {
-            // Remove null bytes
             let sanitized = obj.replace(/\0/g, '');
-            // Remove common XSS vectors
-            sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-            sanitized = sanitized.replace(/javascript:/gi, '');
-            sanitized = sanitized.replace(/on\w+\s*=/gi, '');
             return sanitized;
         }
         if (typeof obj === 'object' && obj !== null && !Array.isArray(obj)) {
+            const result = {};
             for (const key in obj) {
-                obj[key] = sanitizeStrings(obj[key]);
+                result[key] = sanitizeStrings(obj[key], depth + 1);
             }
+            return result;
+        }
+        if (Array.isArray(obj)) {
+            return obj.map(item => sanitizeStrings(item, depth + 1));
         }
         return obj;
     };

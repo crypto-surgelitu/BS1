@@ -228,11 +228,7 @@ const handleSubmit = async (e) => {
 
         const response = await bookingService.createBooking(payload);
 
-        // Log response status for debugging
-        console.log('Booking response:', response.status, response.statusText);
-
         const data = await response.json();
-        console.log('Booking response data:', data);
 
         if (response.ok) {
             setProgress('');
@@ -255,9 +251,8 @@ const handleSubmit = async (e) => {
             }
         } else {
             setProgress('');
-            const errorMsg = data.error || data.details || data.message || 'Booking failed';
+            const errorMsg = data.error || data.details?.[0]?.message || data.message || 'Booking failed';
             setError(errorMsg);
-            console.error('Booking failed:', data);
         }
     } catch (err) {
         console.error('Booking error:', err);
