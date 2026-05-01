@@ -41,9 +41,12 @@ router.post('/admin/login',
 // POST /refresh-token - Refresh access token
 router.post('/refresh-token', authController.refreshToken);
 
+const tirreno = require('../services/tirreno.service');
+
 // POST /logout - Logout and remove session
 router.post('/logout', authenticate, async (req, res) => {
     try {
+        tirreno.trackLogout(req, req.user);
         sessionManager.removeSession(req.user.id);
         res.json({ message: 'Logged out successfully' });
     } catch (error) {

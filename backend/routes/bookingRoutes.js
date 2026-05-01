@@ -9,6 +9,7 @@ const { bookingValidation, bookingStatusValidation, idParamValidation, handleVal
 const { bookingLimiter } = require('../middleware/rateLimiter');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { body, param } = require('express-validator');
+const { tirrenoBlacklistGate } = require('../middleware/tirreno.middleware');
 
 // ============================================================
 // BOOKING ROUTES
@@ -17,6 +18,7 @@ const { body, param } = require('express-validator');
 // POST /book - Create a booking (with notes and category support)
 router.post('/book',
     authenticate,
+    tirrenoBlacklistGate,
     bookingLimiter,
     (req, res, next) => {
         console.log('[BOOKING DEBUG] body:', JSON.stringify(req.body));
@@ -78,6 +80,7 @@ router.put('/bookings/:id/cancel',
 router.put('/bookings/:id/status',
     authenticate,
     authorizeAdmin,
+    tirrenoBlacklistGate,
     bookingStatusValidation,
     handleValidationErrors,
     AuditLogger.middleware('BOOKING_STATUS_UPDATED', 'booking'),

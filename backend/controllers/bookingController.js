@@ -4,6 +4,7 @@ const UserModel = require('../models/userModel');
 const SettingsModel = require('../models/settingsModel');
 const mailerService = require('../services/mailerService');
 const { DEFAULT_ADMIN } = require('../config/systemAccounts');
+const tirreno = require('../services/tirreno.service');
 
 const formatDateDisplay = (dateStr) => {
     const date = new Date(dateStr + 'T00:00:00');
@@ -125,6 +126,8 @@ const bookingController = {
             const results = await BookingModel.createMany(bookingsToCreate);
 
             console.log(`✅ ${bookingType === 'reservation' ? 'Reservation' : 'Booking'} created: Room ${room.name} by ${user.email} for ${dateList.length} date(s)`);
+
+            tirreno.trackBookingAction(req, req.user, 'Create Booking');
 
             // NOW calculate queue positions AFTER bookings are created
             // This ensures the user's own booking is included in the queue count
@@ -284,6 +287,8 @@ const bookingController = {
 
             console.log(`✅ Booking #${id} ${status} by admin`);
 
+            tirreno.trackBookingAction(req, req.user, `${status === 'confirmed' ? 'Approve' : 'Reject'} Booking`);
+
             // Send email to user
             const subject = status === 'confirmed'
                 ? ` START PACKING! Your ${booking.type} is Confirmed`
@@ -401,6 +406,8 @@ const bookingController = {
             await BookingModel.updateStatusWithReason(id, 'cancelled', reason);
 
             console.log(`✅ Booking #${id} cancelled by user ${req.user.id}`);
+
+            tirreno.trackBookingAction(req, req.user, 'Cancel Booking');
 
             const adminEmail = process.env.ADMIN_EMAIL || DEFAULT_ADMIN.email;
             if (adminEmail) {

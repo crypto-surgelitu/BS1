@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const UserModel = require('../models/userModel');
 const sessionManager = require('../services/sessionManager');
 const { generateAccessToken, generateRefreshToken } = require('../utils/tokenUtils');
+const tirreno = require('../services/tirreno.service');
 
 /**
  * Two-Factor Authentication Controller
@@ -174,6 +175,8 @@ const twoFactorController = {
                 });
 
                 console.log(`✅ 2FA verified, logging in: ${user.email}`);
+
+                tirreno.trackLogin(req, user);
 
                 return res.json({
                     message: '2FA verified successfully',

@@ -6,6 +6,7 @@ const UserModel = require('../models/userModel');
 const SettingsModel = require('../models/settingsModel');
 const mailerService = require('../services/mailerService');
 const sessionManager = require('../services/sessionManager');
+const tirreno = require('../services/tirreno.service');
 const { DEFAULT_ADMIN, RESERVED_SYSTEM_EMAILS } = require('../config/systemAccounts');
 const {
     generateAccessToken,
@@ -93,6 +94,8 @@ const authController = {
 
             console.log(`✅ New user registered: ${email}`);
 
+            tirreno.trackRegistration(req, { email, fullName: fullName });
+
             res.status(201).json({
                 message: 'User registered successfully. Please check your email to verify your account.',
                 user: { id: newUser.id, email, fullName, department, role: 'user', emailVerified: false },
@@ -154,6 +157,7 @@ const authController = {
                 }
 
                 const remaining = MAX_FAILED_ATTEMPTS - newAttempts;
+                tirreno.trackLoginFail(req, email);
                 return res.status(401).json({
                     error: `Invalid email or password. ${remaining} attempt(s) remaining before lockout.`
                 });
@@ -235,6 +239,8 @@ const authController = {
                 }
             }
 
+            tirreno.trackLogin(req, user);
+
             res.json({
                 message: 'Login successful',
                 user: {
@@ -311,6 +317,7 @@ const authController = {
 
                 console.warn(`⚠️ Failed admin login attempt: ${email} (${newAttempts}/${MAX_FAILED_ATTEMPTS})`);
                 const remaining = MAX_FAILED_ATTEMPTS - newAttempts;
+                tirreno.trackLoginFail(req, email);
                 return res.status(401).json({
                     error: `Invalid admin credentials. ${remaining} attempt(s) remaining.`
                 });
@@ -391,6 +398,8 @@ const authController = {
                     console.warn('Could not clear login OTP:', err.message);
                 }
             }
+
+            tirreno.trackLogin(req, user);
 
             res.json({
                 message: 'Admin login successful',
@@ -666,6 +675,8 @@ const authController = {
 
             console.log(`✅ Password reset with PIN for: ${user.email} - OTP sent for next login`);
 
+            tirreno.trackPasswordChange(req, user);
+
             mailerService.sendMail(
                 user.email,
                 'Password Changed - SwahiliPot Hub',
@@ -706,6 +717,8 @@ const authController = {
             await UserModel.updatePassword(users[0].id, passwordHash);
 
             console.log(`✅ Password reset for: ${users[0].email}`);
+
+            tirreno.trackPasswordChange(req, users[0]);
 
             mailerService.sendMail(
                 users[0].email,

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const superAdminController = require('../controllers/superAdminController');
 const { authenticate, authorizeSuperAdmin } = require('../middleware/auth');
+const { tirrenoBlacklistGate } = require('../middleware/tirreno.middleware');
 
 // All routes require authentication and super admin role
 router.use(authenticate);
@@ -10,8 +11,8 @@ router.use(authorizeSuperAdmin);
 // Admin management
 router.get('/admins', superAdminController.getAdmins);
 router.get('/users', superAdminController.getUsers);
-router.post('/admins/promote', superAdminController.promoteUser);
-router.post('/admins/demote/:id', superAdminController.demoteAdmin);
+router.post('/admins/promote', tirrenoBlacklistGate, superAdminController.promoteUser);
+router.post('/admins/demote/:id', tirrenoBlacklistGate, superAdminController.demoteAdmin);
 router.post('/admins/:id/disable', superAdminController.disableAdmin);
 router.post('/admins/:id/enable', superAdminController.enableAdmin);
 

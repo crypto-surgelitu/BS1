@@ -22,6 +22,8 @@ const faqRoutes = require('./routes/faqRoutes');
 const preferencesRoutes = require('./routes/preferencesRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const publicReviews = require('./routes/publicReviews');
+const securityRoutes = require('./routes/securityRoutes');
+const tirrenoAutoTrack = require('./middleware/tirreno.middleware');
 
 const app = express();
 const server = http.createServer(app);
@@ -135,6 +137,9 @@ app.use('/', faqRoutes);
 app.use('/', preferencesRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/public-reviews', publicReviews);
+app.use('/', securityRoutes);
+
+app.use(tirrenoAutoTrack);
 
 startReminderCron();
 startWorkingHoursCron();
