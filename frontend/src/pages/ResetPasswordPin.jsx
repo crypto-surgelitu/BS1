@@ -96,7 +96,7 @@ const ResetPasswordPin = () => {
                     backgroundAttachment: 'fixed' 
                 }}
             >
-                <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+                <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-4 sm:p-6 lg:p-8">
                     <div className="flex flex-col items-center mb-6">
                         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                             <CheckCircle className="text-green-600 w-8 h-8" />
@@ -130,7 +130,7 @@ const ResetPasswordPin = () => {
                 backgroundAttachment: 'fixed' 
             }}
         >
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-col items-center mb-6">
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                         <Lock className="text-blue-600 w-8 h-8" />

@@ -340,7 +340,7 @@ const SuperAdminDashboard = () => {
                                 </div>
 
                                 {/* Admins Table */}
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
                                     <div className="p-4 border-b border-gray-200 flex justify-between items-center">
                                         <h3 className="font-semibold text-gray-900">Admin Accounts</h3>
                                         <button
@@ -416,7 +416,7 @@ const SuperAdminDashboard = () => {
 
                         {/* Audit Logs Tab */}
                         {activeTab === 'audit' && (
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
                                 <div className="p-4 border-b border-gray-200 flex justify-between items-center">
                                     <h3 className="font-semibold text-gray-900">Audit Logs</h3>
                                     <div className="flex items-center gap-3">

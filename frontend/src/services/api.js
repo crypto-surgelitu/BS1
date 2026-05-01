@@ -152,6 +152,14 @@ async function apiFetch(endpoint, options = {}, requiresAuth = false) {
 
     let response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
+    if (response.status === 400) {
+        const text = await response.text();
+        console.log('[API DEBUG]', method, endpoint, '→ 400', text);
+        return new Response(text, { status: 400, headers: response.headers });
+    }
+
+    console.log('[API DEBUG]', method, endpoint, '→', response.status);
+
     if (response.status === 401 && requiresAuth) {
         // Don't auto-redirect to login - let the caller handle it
         // This prevents infinite loops and unexpected redirects

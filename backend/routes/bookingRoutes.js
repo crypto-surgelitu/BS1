@@ -18,6 +18,10 @@ const { body, param } = require('express-validator');
 router.post('/book',
     authenticate,
     bookingLimiter,
+    (req, res, next) => {
+        console.log('[BOOKING DEBUG] body:', JSON.stringify(req.body));
+        next();
+    },
     bookingValidation,
     [
         body('notes').optional().isLength({ max: 500 }).withMessage('Notes cannot exceed 500 characters'),

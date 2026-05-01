@@ -55,8 +55,8 @@ const Navbar = ({ onMenuClick }) => {
                                     className="h-8 w-auto mr-3"
                                 />
                                 <div>
-                                    <h1 className="text-xl font-extrabold text-gray-900 leading-none tracking-tight"> Swahilipot Hub BS1 </h1>
-                                    <p className="text-sm text-gray-500 font-medium">Booking System</p>
+                                    <h1 className="text-lg sm:text-xl font-extrabold text-gray-900 leading-none tracking-tight"> Swahilipot Hub BS1 </h1>
+                                    <p className="text-xs sm:text-sm text-gray-500 font-medium">Booking System</p>
                                 </div>
                             </Link>
                         </div>
@@ -68,17 +68,17 @@ const Navbar = ({ onMenuClick }) => {
                         </div>
                         <Link
                             to="/preferences"
-                            className="flex items-center px-3 py-2 mr-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                            className="flex items-center px-2 sm:px-3 py-2 mr-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
                         >
-                            <Settings className="w-4 h-4 mr-2" />
-                            Preferences
+                            <Settings className="w-4 h-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Preferences</span>
                         </Link>
                         <button
                             onClick={handleLogout}
-                            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                            className="flex items-center px-2 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
                         >
-                            <LogOut className="w-4 h-4 mr-2" />
-                            Logout
+                            <LogOut className="w-4 h-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Logout</span>
                         </button>
                     </div>
                 </div>

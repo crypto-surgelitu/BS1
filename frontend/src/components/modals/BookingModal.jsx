@@ -253,6 +253,7 @@ const handleSubmit = async (e) => {
             setProgress('');
             const errorMsg = data.error || data.details?.[0]?.message || data.message || 'Booking failed';
             setError(errorMsg);
+            console.log('[BOOKING] Full error response:', data);
         }
     } catch (err) {
         console.error('Booking error:', err);
@@ -275,7 +276,7 @@ const monthYear = currentMonth.toLocaleDateString('en-US', { month: 'long', year
 const renderCalendarGrid = () => {
     const days = [];
     for (let i = 0; i < startingDayOfWeek; i++) {
-        days.push(<div key={`empty-${i}`} className="h-10" />);
+        days.push(<div key={`empty-${i}`} className="h-11" />);
     }
     for (let day = 1; day <= daysInMonth; day++) {
         const dateObj = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
@@ -303,8 +304,9 @@ const renderCalendarGrid = () => {
                 }}
                 data-date={dateStr}
                 className={`
-                        h-10 w-10 rounded-full flex items-center justify-center text-sm font-medium
-                        transition-all duration-150 select-none touch-none
+                        h-11 w-11 rounded-full flex items-center justify-center text-sm font-medium
+                        transition-all duration-150 select-none
+                        sm:touch-none
                         ${isPast
                         ? 'text-gray-300 cursor-not-allowed'
                         : isSelected
@@ -366,7 +368,7 @@ return (
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                        className="p-2 -mr-2 -mt-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center min-w-[44px] min-h-[44px]"
                     >
                         <X className="w-6 h-6" />
                     </button>
@@ -432,7 +434,7 @@ return (
                                     <button
                                         type="button"
                                         onClick={() => navigateMonth(-1)}
-                                        className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors"
+                                        className="p-2 rounded-lg hover:bg-gray-200 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                                     >
                                         <ChevronLeft className="w-5 h-5 text-gray-600" />
                                     </button>
@@ -440,7 +442,7 @@ return (
                                     <button
                                         type="button"
                                         onClick={() => navigateMonth(1)}
-                                        className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors"
+                                        className="p-2 rounded-lg hover:bg-gray-200 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                                     >
                                         <ChevronRight className="w-5 h-5 text-gray-600" />
                                     </button>

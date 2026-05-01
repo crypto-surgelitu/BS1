@@ -140,7 +140,7 @@ const AdminLogin = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-col items-center mb-8">
                     <img 
                         src={spfLogo} 

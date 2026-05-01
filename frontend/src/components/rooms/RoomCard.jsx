@@ -18,10 +18,12 @@ const RoomCard = ({ room, onOpenModal }) => {
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
             {/* Room Thumbnail */}
-            <div className="relative h-48 w-full overflow-hidden">
+            <div className="relative h-32 sm:h-48 w-full overflow-hidden">
                 <img 
                     src={imageSrc} 
                     alt={room.name} 
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover rounded-t-xl transition-transform duration-300 hover:scale-105"
                     onError={(e) => {
                         e.target.src = roomPlaceholder;

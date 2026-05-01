@@ -19,6 +19,8 @@ const bookingController = {
     // BOOK ROOM
     async createBooking(req, res) {
         const { userId, roomId, date, startTime, endTime, type, dates, requiredAmenities, preferredAmenities } = req.body;
+        
+        console.log('[BOOKING] createBooking called:', JSON.stringify(req.body));
 
         const bookingType = type === 'reservation' ? 'reservation' : 'booking';
 
